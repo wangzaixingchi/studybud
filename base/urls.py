@@ -20,5 +20,6 @@ urlpatterns = [
     path('game/', views.game, name="game"),
     path('update_score/', views.update_score, name="update_score"),
     path('get_ranklist/', views.get_ranklist, name='get_ranklist'),
+    path('room_list_view/', views.room_list_view, name='room_list_view'),
 
 ]

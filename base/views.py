@@ -8,7 +8,7 @@ from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from .forms import MessageForm
 from django.contrib import messages
-
+from django.core.paginator import Paginator
 
 def loginPage(request):
     page = 'login'
@@ -63,7 +63,7 @@ def home(request):
     )
     topics = Topic.objects.all()[0:5]
     room_count = rooms.count()
-    room_messages = Message.objects.filter(Q(room__topic__name__icontains=q))
+    room_messages = Message.objects.filter(Q(room__topic__name__icontains=q))[0:5]
 
     context = {'rooms': rooms, 'topics': topics,
                'room_count': room_count, 'room_messages': room_messages}
@@ -199,7 +199,7 @@ def topicsPage(request):
 
 
 def activityPage(request):
-    room_messages = Message.objects.all()[0:10]
+    room_messages = Message.objects.all()[0:5]
     context = {'room_messages': room_messages}
     return render(request, 'base/activity.html', context)
 
@@ -248,3 +248,12 @@ def get_ranklist(request):
         return JsonResponse(ranklist, safe=False)  # 返回 JSON 响应
 
     return JsonResponse({"error": "不支持的请求方法"}, status=405)
+
+def room_list_view(request):
+    rooms = Room.objects.all()  # 获取所有房间
+    paginator = Paginator(rooms, 2)  # 每页显示 10 个房间
+
+    page_number = request.GET.get('page')  # 获取当前页码
+    page_obj = paginator.get_page(page_number)  # 获取当前页的房间对象
+
+    return render(request, 'home.html', {'page_obj': page_obj})
