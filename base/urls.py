@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 
+from django.contrib import admin
 urlpatterns = [
     path('login/', views.loginPage, name="login"),
     path('logout/', views.logoutUser, name="logout"),
@@ -21,5 +22,8 @@ urlpatterns = [
     path('update_score/', views.update_score, name="update_score"),
     path('get_ranklist/', views.get_ranklist, name='get_ranklist'),
     path('room_list_view/', views.room_list_view, name='room_list_view'),
+    path('room/<int:room_id>/toggle_favorite/', views.toggle_favorite, name='toggle_favorite'),
+    path('message/<int:message_id>/toggle-like/', views.toggle_like, name='toggle_like'),
+    path('my-favorites/', views.my_favorites, name='my-favorites'),
 
 ]

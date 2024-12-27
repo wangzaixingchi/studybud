@@ -12,9 +12,25 @@
                     <div class="roomListRoom__actions">
                         <span>{{ room.created|timesince }} 以前</span>
                     </div>
+                    <form action="{% url 'toggle_favorite' room.id %}" method="post">
+                        {% csrf_token %}
+                        {% if user in room.favorites.all %}
+                            已收藏
+                        {% else %}
+                            可收藏
+                        {% endif %}
+                        <button type="submit"
+                                class="{% if user in room.favorites.all %}button-favorited{% else %}button-not-favorited{% endif %}">
+                            {% if user in room.favorites.all %}
+                                ⭐
+                            {% else %}
+                                ❌
+                            {% endif %}
+                        </button>
+                    </form>
                 </div>
                 <div class="roomListRoom__content">
-                    <a href="{% url 'room' room.id %}">{{ room.name }}</a>
+                    <a href="{% url 'room'  pk=room.id %}">{{ room.name }}</a>
                 </div>
                 <div class="roomListRoom__meta">
                     <a href="{% url 'room' room.id %}" class="roomListRoom__joined">
@@ -23,47 +39,71 @@
                     <p class="roomListRoom__topic">{{ room.topic.name }}</p>
                 </div>
             </div>
+        {% empty %}
+            <div class="no-rooms">
+                <p>没有房间哦!</p>
+            </div>
         {% endfor %}
     </div>
 
-    <div class="pagination">
-        <button id="prevPage" onclick="changePage(-1)">上一页</button>
-        <span id="pageInfo"></span>
-        <button id="nextPage" onclick="changePage(1)">下一页</button>
+    {% if rooms %}
+        <div class="pagination">
+            <button id="prevPage" onclick="changePage(-1)">上一页</button>
+            <span id="pageInfo"></span>
+            <button id="nextPage" onclick="changePage(1)">下一页</button>
+        </div>
+    {% endif %}
 
-       
-    </div>
+    <style>
+        .no-rooms {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.5em;
+            color: #888; /* 字体颜色 */
+            font-weight: bold;
+        }
+        .no-rooms p {
+            margin: 0;
+            padding: 10px 0;
+        }
+        .pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
 
-    <script>const itemsPerPage = 2; // 每页显示的项数
-    let currentPage = 1;
-    const items = document.querySelectorAll('.roomListRoom'); // 获取所有房间项
-    const totalPages = Math.ceil(items.length / itemsPerPage);
+    <script>
+        const itemsPerPage = 2; // 每页显示的项数
+        let currentPage = 1;
+        const items = document.querySelectorAll('.roomListRoom'); // 获取所有房间项
+        const totalPages = Math.ceil(items.length / itemsPerPage);
 
-    function showPage(page) {
-        if (page < 1 || page > totalPages) return; // 检查页码有效性
-        currentPage = page;
+        function showPage(page) {
+            if (page < 1 || page > totalPages) return; // 检查页码有效性
+            currentPage = page;
 
-        // 计算显示的起始和结束项索引
-        const start = (currentPage - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
+            // 计算显示的起始和结束项索引
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
 
-        // 隐藏所有房间项
-        items.forEach((item, index) => {
-            item.style.display = index >= start && index < end ? 'block' : 'none';
-        });
+            // 隐藏所有房间项
+            items.forEach((item, index) => {
+                item.style.display = index >= start && index < end ? 'block' : 'none';
+            });
 
-        // 更新分页信息
-        document.getElementById('pageInfo').textContent = `第 ${currentPage} 页，共 ${totalPages} 页`;
+            // 更新分页信息
+            document.getElementById('pageInfo').textContent = `第 ${currentPage} 页，共 ${totalPages} 页`;
 
-        // 更新按钮状态
-        document.getElementById('prevPage').disabled = currentPage === 1;
-        document.getElementById('nextPage').disabled = currentPage === totalPages;
-    }
+            // 更新按钮状态
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages;
+        }
 
-    function changePage(direction) {
-        showPage(currentPage + direction);
-    }
+        function changePage(direction) {
+            showPage(currentPage + direction);
+        }
 
-    // 初始化显示第一页
-    showPage(currentPage);</script> <!-- 引入外部 JavaScript 文件 -->
+        // 初始化显示第一页
+        showPage(currentPage);
+    </script>
 </div>

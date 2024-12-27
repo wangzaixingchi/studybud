@@ -2,13 +2,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
-from .models import Room, Topic, Message, User
+from .models import Room, Topic, Message, User, Announcement
 from .forms import RoomForm, UserForm, MyUserCreationForm
 from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from .forms import MessageForm
 from django.contrib import messages
 from django.core.paginator import Paginator
+
 
 def loginPage(request):
     page = 'login'
@@ -48,7 +49,7 @@ def registerPage(request):
             login(request, user)
             return redirect('home')
         else:
-            messages.error(request, '错了！！')
+            messages.error(request, '用户已存在或二次密码不匹配!')
 
     return render(request, 'base/login_register.html', {'form': form})
 
@@ -61,12 +62,13 @@ def home(request):
         Q(name__icontains=q) |
         Q(description__icontains=q)
     )
+    announcements = Announcement.objects.all().order_by('-created_at')[:5]
     topics = Topic.objects.all()[0:5]
     room_count = rooms.count()
     room_messages = Message.objects.filter(Q(room__topic__name__icontains=q))[0:5]
 
     context = {'rooms': rooms, 'topics': topics,
-               'room_count': room_count, 'room_messages': room_messages}
+               'room_count': room_count, 'room_messages': room_messages, 'announcements': announcements}
     return render(request, 'base/home.html', context)
 
 
@@ -99,9 +101,44 @@ def room(request, pk):
     context = {
         'room': room,
         'room_messages': room_messages,
-        'participants': participants
+        'participants': participants,
+
     }
     return render(request, 'base/room.html', context)
+
+
+from django.db import transaction
+
+def toggle_favorite(request, room_id):
+    room = get_object_or_404(Room, id=room_id)
+    if request.user.is_authenticated:
+        with transaction.atomic():
+            if request.user in room.favorites.all():
+                room.favorites.remove(request.user)
+            else:
+                room.favorites.add(request.user)
+            if room in request.user.favorites_rooms.all():  # 使用 favorites_rooms
+                request.user.favorites_rooms.remove(room)
+            else:
+                request.user.favorites_rooms.add(room)
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
+
+def toggle_like(request, message_id):
+    if request.method == 'POST':
+        message = get_object_or_404(Message, id=message_id)
+        if request.user in message.likes.all():
+            message.likes.remove(request.user)
+        else:
+            message.likes.add(request.user)
+
+        return JsonResponse({'liked': request.user in message.likes.all()})
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+def my_favorites(request):
+    # 获取当前用户的收藏房间
+    favorites = request.user.favorites.all()  # 获取当前用户收藏的所有房间
+    return render(request, 'base/feed_component_favorite.html', {'favorites': favorites})
 
 
 @login_required(login_url='/login')
@@ -133,7 +170,13 @@ def userProfile(request, pk):
     rooms = user.room_set.all()
     room_messages = user.message_set.all()
     topics = Topic.objects.all()
-    context = {'user': user, 'rooms': rooms, 'room_messages': room_messages, 'topics': topics}
+    favorites = user.favorites_rooms.all()  # 获取用户的收藏房间
+    context = {
+        'user': user,
+        'rooms': rooms,
+        'room_messages': room_messages,
+        'topics': topics,
+        'favorites': favorites}
     return render(request, 'base/profile.html', context)
 
 
@@ -249,6 +292,7 @@ def get_ranklist(request):
 
     return JsonResponse({"error": "不支持的请求方法"}, status=405)
 
+
 def room_list_view(request):
     rooms = Room.objects.all()  # 获取所有房间
     paginator = Paginator(rooms, 2)  # 每页显示 10 个房间
@@ -257,3 +301,6 @@ def room_list_view(request):
     page_obj = paginator.get_page(page_number)  # 获取当前页的房间对象
 
     return render(request, 'home.html', {'page_obj': page_obj})
+
+
+import logging

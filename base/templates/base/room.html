@@ -56,6 +56,11 @@
                     <div class="room__header scroll">
                         <div class="room__info">
                             <h3>{{ room.name }}</h3>
+                            {% if user in room.favorites.all %}
+                                <button class="btn">
+                                    ⭐已收藏
+                                </button>
+                            {% endif %}
                             <span>{{ room.created|timesince }}以前</span>
                         </div>
                         <div class="room__hosted">
@@ -84,7 +89,19 @@
                                                 </div>
                                                 <span>@{{ message.user.username }}</span>
                                             </a>
-                                            <span class="thread__date">{{ message.created|timesince }} day ago</span>
+                                            <span class="thread__date">{{ message.created|timesince }} 以前</span>
+                                            <p>
+                                                 <span
+                                                         class="like-button{% if request.user in message.likes.all %} liked{% endif %}"
+                                                         data-message-id="{{ message.id }}"
+                                                         onclick="toggleLike(this)">
+                                                            {% if request.user in message.likes.all %}
+                                                                💕
+                                                            {% else %}
+                                                                💙
+                                                            {% endif %}
+                                                 </span>
+                                            </p>
                                         </div>
                                         {% if request.user == message.user %}
                                             <a href="{% url 'delete-message' message.id %}">
@@ -100,7 +117,31 @@
                                             </a>
                                         {% endif %}
                                     </div>
+                                    <script>
+                                        function toggleLike(element) {
+                                            const messageId = element.getAttribute('data-message-id');
+
+                                            // 添加动画类
+                                            element.classList.add('like-animation');
+
+                                            // 发送 AJAX 请求
+                                            fetch(`/message/${messageId}/toggle-like/`, {
+                                                method: 'POST',
+                                                headers: {'X-CSRFToken': '{{ csrf_token }}'}
+                                            })
+                                                .then(response => {
+                                                    if (response.ok) {
+                                                        // 切换类以显示点赞状态
+                                                        element.classList.toggle('liked');
+                                                        // 更新文本
+                                                        element.textContent = element.classList.contains('liked') ? '💕' : '💙';
+                                                    }
+                                                })
+                                                .catch(error => console.error('Error:', error));
+                                        }
+                                    </script>
                                     <div class="thread__details">
+
                                         {% if message.body %}
                                             <p>{{ message.body }}</p>  <!-- 显示文本内容 -->
                                         {% endif %}

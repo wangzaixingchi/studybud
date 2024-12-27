@@ -1256,3 +1256,69 @@ a {
 .pagination button:disabled {
     background-color: #cccccc;
 }
+
+.like-button {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.like-button.liked {
+    color: red; /* 点赞后的颜色 */
+    transform: scale(1.2); /* 放大效果 */
+}
+
+@keyframes like-animation {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.5);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.like-animation {
+    animation: like-animation 0.5s ease;
+}
+
+/* 仅在 favorited 类下生效 */
+button.button-favorited {
+    background-color: #e74c3c; /* 红色背景 */
+    color: white; /* 白色文字 */
+}
+
+button.button-favorited:hover {
+    background-color: #c0392b; /* 深红色悬停 */
+}
+
+/* 仅在 not-favorited 类下生效 */
+button.button-not-favorited {
+    background-color: #3498db; /* 蓝色背景 */
+    color: white; /* 白色文字 */
+}
+
+button.button-not-favorited:hover {
+    background-color: #2980b9; /* 深蓝色悬停 */
+}
+
+#announcements {
+    overflow: hidden; /* 确保内容不会溢出 */
+}
+
+.announcements-content {
+    display: flex; /* 使用 Flexbox */
+    white-space: nowrap; /* 防止换行 */
+    overflow: hidden; /* 隐藏溢出的内容 */
+    padding: 10px; /* 添加内边距 */
+    background-color: #3F4156; /* 背景色 */
+
+    border-radius: 5px; /* 圆角 */
+}
+
+.announcement {
+    margin-right: 20px; /* 公告之间的间距 */
+}

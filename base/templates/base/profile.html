@@ -1,48 +1,96 @@
-{%extends 'main.html'%}
+{% extends 'main.html' %}
 
-{%block content%}
-<main class="profile-page layout layout--3">
-  <div class="container">
-    <!-- Topics Start -->
-    {%include 'base/topics_component.html'%}
-    <!-- Topics End -->
+{% block content %}
+    <main class="profile-page layout layout--3">
+        <div class="container">
+            <!-- Topics Start -->
+            {% include 'base/topics_component.html' %}
+            <!-- Topics End -->
 
-    <!-- Room List Start -->
-    <div class="roomList">
-      <div class="profile">
-        <div class="profile__avatar">
-          <div class="avatar avatar--large active">
-            <img src="{{user.avatar.url}}" />
-          </div>
-        </div>
-        <div class="profile__info">
-          <h3>{{user.username}}</h3>
-          <p>@{{user.username}}</p>
-          {%if request.user == user %}
-          <a href="{%url 'update-user'%}" class="btn btn--main btn--pill">编辑资料</a>
-          {%endif%}
-        </div>
-        <div class="profile__about">
-          <h3>简介</h3>
-          <p>
-            {{user.bio}}
-          </p>
-        </div>
-      </div>
+            <!-- Room List Start -->
+            <div class="roomList">
+                <div class="profile">
+                    <div class="profile__avatar">
+                        <div class="avatar avatar--large active">
+                            <img src="{{ user.avatar.url }}"/>
+                        </div>
+                    </div>
+                    <div class="profile__info">
+                        <h3>{{ user.username }}</h3>
+                        <p>@{{ user.username }}</p>
+                        {% if request.user == user %}
+                            <a href="{% url 'update-user' %}" class="btn btn--main btn--pill">编辑资料</a>
+                        {% endif %}
+                    </div>
+                    <div class="profile__about">
+                        <h3>简介</h3>
+                        <p>{{ user.bio }}</p>
+                    </div>
+                </div>
 
-      <div class="roomList__header">
-        <div>
-          <h2>我的房间</a>
-          </h2>
-        </div>
-      </div>
-      {%include 'base/feed_component.html'%}
-    </div>
-    <!-- Room List End -->
+                <div class="roomList__header">
+                    <div style="display: flex; width: 100%;">
+                        <a id="my-rooms" href="#" style="flex: 1; text-align: center;" class="active" onclick="loadContent('rooms')">
+                            我的房间
+                        </a>
+                        <a id="my-favorites" href="#" style="flex: 1; text-align: center;" onclick="loadContent('favorites')">
+                            我的收藏
+                        </a>
+                    </div>
+                </div>
 
-    <!-- Activities Start -->
-    {%include 'base/activity_component.html'%}
-    <!-- Activities End -->
-  </div>
-</main>
-{%endblock%}
+                <div id="content-area">
+                    <div id="rooms-content">
+                        {% include 'base/feed_component.html' %}
+                    </div>
+                    <div id="favorites-content" style="display: none;">
+                        {% include 'base/feed_component_favorite.html' %}
+                    </div>
+                </div>
+            </div>
+            <!-- Room List End -->
+
+            <!-- Activities Start -->
+            {% include 'base/activity_component.html' %}
+            <!-- Activities End -->
+        </div>
+    </main>
+
+    <style>
+        .active {
+            font-weight: bold;
+            color: #007BFF; /* 或其他您希望的颜色 */
+        }
+        a:hover {
+            text-decoration: underline; /* 鼠标悬浮效果 */
+            color: #0056b3; /* 鼠标悬浮时的颜色 */
+        }
+    </style>
+
+    <script>
+        function loadContent(tab) {
+            const roomsContent = document.getElementById('rooms-content');
+            const favoritesContent = document.getElementById('favorites-content');
+
+            if (tab === 'rooms') {
+                roomsContent.style.display = 'block';
+                favoritesContent.style.display = 'none';
+                setActiveTab('my-rooms');
+            } else if (tab === 'favorites') {
+                roomsContent.style.display = 'none';
+                favoritesContent.style.display = 'block';
+                setActiveTab('my-favorites');
+            }
+        }
+
+        function setActiveTab(activeId) {
+            const tabs = ['my-rooms', 'my-favorites'];
+            tabs.forEach(id => {
+                const tab = document.getElementById(id);
+                if (tab) {
+                    tab.classList.toggle('active', id === activeId);
+                }
+            });
+        }
+    </script>
+{% endblock %}

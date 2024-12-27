@@ -22,3 +22,5 @@ class UserForm(ModelForm):
 class MessageForm(forms.Form):
     body = forms.CharField(widget=forms.TextInput(attrs={'placeholder': '发表言论'}))
     image = forms.ImageField(required=False)  # 可选的图片字段
+
+

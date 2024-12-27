@@ -1,65 +1,92 @@
 {% load static %}
 <header class="header header--loggedIn">
-  <div class="container">
-    <a href="{% url 'home' %}" class="header__logo">
-      <img src="{% static 'images/logo.svg' %}" />
-      <h1>聊天室</h1>
-    </a>
-    <form class="header__search" method="GET" id="searchQuery" action="{% url 'home' %}">
-      <label>
-        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-          <title>search</title>
-          <path d="M32 30.586l-10.845-10.845c1.771-2.092 2.845-4.791 2.845-7.741 0-6.617-5.383-12-12-12s-12 5.383-12 12c0 6.617 5.383 12 12 12 2.949 0 5.649-1.074 7.741-2.845l10.845 10.845 1.414-1.414zM12 22c-5.514 0-10-4.486-10-10s4.486-10 10-10c5.514 0 10 4.486 10 10s-4.486 10-10 10z"></path>
-        </svg>
-        <input name="q" placeholder="搜索房间" onclick="submitSearch()" />
-      </label>
-    </form>
-    <nav class="header__menu">
-      {% if request.user.is_authenticated %}
-      <div class="header__user">
-        <a href="{% url 'user-profile' request.user.id %}">
-          <div class="avatar avatar--medium active">
-            <img src="{{ request.user.avatar.url }}" />
-          </div>
-          <p>{{ request.user.username }}<span>@{{ request.user.username }}</span></p>
+    <div id="announcements">
+        <div class="announcements-content">
+            {% for announcement in announcements %}
+            <div class="announcement">
+                <p>{{ announcement.title }} - {{ announcement.content }} - 发布者：{{ announcement.author }} -
+                    发布时间：{{ announcement.created_at }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="container">
+        <a href="{% url 'home' %}" class="header__logo">
+            <img src="{% static 'images/logo.svg' %}"/>
+            <h1>聊天室</h1>
         </a>
-        <button class="dropdown-button" onclick="toggleDropdown()">
-          <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-            <title>chevron-down</title>
-            <path d="M16 21l-13-13h-3l16 16 16-16h-3l-13 13z"></path>
-          </svg>
-        </button>
-      </div>
-      <div class="dropdown-menu" id="dropdownMenu" style="display: none;">
-        <a href="{% url 'update-user' %}" class="dropdown-link">设置</a>
-        <a href="{% url 'game' %}" class="dropdown-link">娱乐</a>
-          <a href="{% url 'game' %}" class="dropdown-link">管理员</a>
-        <a href="{% url 'logout' %}" class="dropdown-link">退出登录</a>
-      </div>
-      {% else %}
-      <div>
-        <a href="{% url 'login' %}">
-          <img src="{% static 'images/avatar.svg' %}" />
-        </a>
-        <a href="{% url 'login' %}"><span>登录</span></a>
-      </div>
-      {% endif %}
-    </nav>
-  </div>
+        <form class="header__search" method="GET" id="searchQuery" action="{% url 'home' %}">
+            <label>
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                    <title>search</title>
+                    <path d="M32 30.586l-10.845-10.845c1.771-2.092 2.845-4.791 2.845-7.741 0-6.617-5.383-12-12-12s-12 5.383-12 12c0 6.617 5.383 12 12 12 2.949 0 5.649-1.074 7.741-2.845l10.845 10.845 1.414-1.414zM12 22c-5.514 0-10-4.486-10-10s4.486-10 10-10c5.514 0 10 4.486 10 10s-4.486 10-10 10z"></path>
+                </svg>
+                <input name="q" placeholder="搜索房间" onclick="submitSearch()"/>
+            </label>
+        </form>
+        <nav class="header__menu">
+            {% if request.user.is_authenticated %}
+            <div class="header__user">
+                <a href="{% url 'user-profile' request.user.id %}">
+                    <div class="avatar avatar--medium active">
+                        <img src="{{ request.user.avatar.url }}"/>
+                    </div>
+                    <p>{{ request.user.username }}<span>@{{ request.user.username }}</span></p>
+                </a>
+                <button class="dropdown-button" onclick="toggleDropdown()">
+                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                        <title>chevron-down</title>
+                        <path d="M16 21l-13-13h-3l16 16 16-16h-3l-13 13z"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="dropdown-menu" id="dropdownMenu" style="display: none;">
+                <a href="{% url 'update-user' %}" class="dropdown-link">设置</a>
+                <a href="{% url 'game' %}" class="dropdown-link">娱乐</a>
+                {% if request.user.is_staff %}  <!-- 检查用户是否为管理员 -->
+                <a href="{% url 'admin:index' %}" class="dropdown-link">管理员</a>  <!-- 管理员链接 -->
+                {% endif %}
+                <a href="{% url 'logout' %}" class="dropdown-link">退出登录</a>
+            </div>
+            {% else %}
+            <div>
+                <a href="{% url 'login' %}">
+                    <img src="{% static 'images/avatar.svg' %}"/>
+                </a>
+                <a href="{% url 'login' %}"><span>登录</span></a>
+            </div>
+            {% endif %}
+        </nav>
+    </div>
 </header>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-function toggleDropdown() {
-    const dropdownMenu = document.getElementById('dropdownMenu');
-    dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
-}
+    $(document).ready(function () {
+        var announcements = $('.announcements-content');
+        var singleAnnouncementWidth = $('.announcement').outerWidth(true); // 获取单个公告项的宽度
 
-document.addEventListener('click', function(event) {
-    const dropdownMenu = document.getElementById('dropdownMenu');
-    const dropdownButton = document.querySelector('.dropdown-button');
+        // 克隆公告以实现循环效果
+        announcements.append(announcements.html());
 
-    if (!dropdownMenu.contains(event.target) && !dropdownButton.contains(event.target)) {
-        dropdownMenu.style.display = 'none';
-    }
-});
+        // 设置内容的总宽度为三个公告的宽度
+        announcements.css('width', singleAnnouncementWidth * 3);
+
+        // 开始滚动
+        function startScrolling() {
+            announcements.animate({
+                'margin-left': -singleAnnouncementWidth + 'px' // 向左滚动一个公告的宽度
+            }, 45000, function () {
+                // 重置位置
+                announcements.css('margin-left', 0); // 将 margin-left 重置为0
+            });
+        }
+
+        setInterval(startScrolling, 3000); // 每6秒滚动一次
+
+        // 切换下拉菜单
+        window.toggleDropdown = function () {
+            $('#dropdownMenu').toggle(); // 切换显示状态
+        }
+    });
 </script>
