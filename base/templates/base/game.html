@@ -1,0 +1,401 @@
+{% extends 'main.html' %}
+{% block content %}
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>贪吃蛇游戏</title>
+        <style>
+
+            .center-game {
+                align-items: center;
+            }
+
+            .gamemap {
+                height: calc(100% - 8vh);
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                position: relative;
+            }
+
+
+            canvas {
+                background-color: #393949;
+                max-width: 100%;
+                max-height: 100%;
+            }
+
+            .operation {
+                position: absolute;
+                top: 10px;
+                display: flex;
+                gap: 10px;
+            }
+
+            .close-button {
+
+                cursor: pointer;
+                color: #007bff;
+                text-decoration: none;
+            }
+
+            .direction-buttons {
+                display: flex;
+                justify-content: space-between; /* Distributes space between buttons */
+                width: 100%; /* Makes the container take full width */
+            }
+
+            .direction-buttons button {
+                flex: 1; /* Makes buttons take equal space */
+                margin: 5px; /* Adds some spacing between buttons */
+                font-size: 3vh; /* Adjust font size as needed */
+                background-color: #5d86c4; /* Button color */
+                color: white; /* Text color */
+                border: none; /* Removes border */
+                border-radius: 5px; /* Rounded corners */
+                cursor: pointer; /* Pointer cursor on hover */
+                transition: background-color 0.3s; /* Smooth background color change */
+            }
+
+            button {
+                background-color: #5d86c4;
+                border: none;
+                border-radius: 5px;
+                font-size: 3vh;
+                color: white;
+                padding: 10px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+
+            button:hover {
+                background-color: #80a3c0;
+            }
+
+            .ranklist {
+                width: 80%;
+                max-width: 512px;
+                position: absolute;
+                background-color: #c9c174;
+                padding: 10px;
+                margin: auto 10px;
+                border-radius: 5px;
+                display: none;
+            }
+
+            .ranklist.show {
+                display: block;
+            }
+
+            .score-board {
+                width: 100%;
+                justify-content: center;
+                align-items: center;
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: space-around;
+                background-color: #2d2d3a;
+                padding: 10px;
+                border-radius: 5px;
+            }
+
+            .transparent {
+                opacity: 0.2; /* Set opacity to 20% */
+                transition: opacity 0.3s; /* Smooth transition for opacity change */
+            }
+
+            .transparent:hover {
+                opacity: 1; /* Full opacity on hover */
+            }
+
+            .mobile-controls {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                bottom: 10px;
+            }
+
+            .mobile-controls button {
+                margin: 5px;
+            }
+
+            @media (max-width: 600px) {
+                .mobile-controls {
+                    display: flex;
+                }
+
+                .operation {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+    <div>
+        <div class="center-game">
+            <div class="score-board">
+                <div class="apple">
+                    <img src="https://app2468.acapp.acwing.com.cn/static/images/apple.png" alt="apple"
+                         style="width: 50px;">
+                    <div>分数: <span id="score">0</span></div>
+                </div>
+                <div class="cup">
+                    <img src="https://app2468.acapp.acwing.com.cn/static/images/cup.png" alt="cup" style="width: 50px;">
+                    <div>记录: <span id="record">{{ user.score }}</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="gamemap">
+            <canvas id="gameCanvas" tabindex="0" width="500" height="500"></canvas>
+            <div class="operation" id="operationButtons">
+                <button onclick="restartGame()">开始游戏</button>
+                <button onclick="toggleRanklist()">排行榜</button>
+            </div>
+            <div class="mobile-controls" style="width: 50%">
+                <div id="mobileOperationButtons">
+                    <button onclick="restartGame()">开始游戏</button>
+                    <button onclick="toggleRanklist()">排行榜</button>
+                </div>
+
+                <button  class="transparent" onclick="changeDirection('up')">↑</button>
+                <div class="direction-buttons">
+                    <button  class="transparent" onclick="changeDirection('left')">←</button>
+                    <button  class="transparent" onclick="changeDirection('right')">→</button>
+                </div>
+                <button class="transparent" onclick="changeDirection('down')">↓</button>
+            </div>
+            <div class="ranklist" id="ranklist">
+                <div style="display: flex;
+            justify-content: flex-end; /* Aligns items to the right */
+            padding: 10px;
+         "><span onclick="toggleRanklist()" class="close-button">关闭</span></div>
+                <div id="players"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const game = {
+            gridSize: 20,
+            tileCount: 25,
+            score: 0,
+            id: {{ user.id }},
+            record: {{ user.score }},
+            snake: [{x: 10, y: 10}],
+            apple: {},
+            direction: {x: 0, y: 0},
+            gameSpeed: 2000 / 15,
+            gameInterval: null,
+            canvas: document.getElementById('gameCanvas'),
+            ctx: document.getElementById('gameCanvas').getContext('2d'),
+            scoreElement: document.getElementById('score'),
+            recordElement: document.getElementById('record'),
+            ranklistElement: document.getElementById('ranklist'),
+            playersElement: document.getElementById('players'),
+            operationButtons: document.getElementById('operationButtons'),
+            mobileOperationButtons: document.getElementById('mobileOperationButtons'),
+
+            appleImage: new Image()
+        };
+
+        game.appleImage.src = 'https://app2468.acapp.acwing.com.cn/static/images/apple.png';
+
+        function restartGame() {
+            game.score = 0;
+            game.scoreElement.textContent = game.score;
+            game.snake = [{x: 10, y: 10}];
+            game.apple = placeApple();
+            game.direction = {x: 0, y: 0};
+            clearInterval(game.gameInterval);
+            game.operationButtons.style.display = 'none';
+            game.mobileOperationButtons.style.display = 'none';
+            gameLoop();
+        }
+
+        function gameLoop() {
+            game.gameInterval = setInterval(() => {
+                if (isGameOver()) {
+                    clearInterval(game.gameInterval);
+                    alert("游戏结束！您的分数是: " + game.score);
+                    if (game.score > game.record) {
+                        game.record = game.score;
+                        game.recordElement.textContent = game.record;
+                        submitScoreToDatabase(game.id, game.score);
+                    }
+                    game.operationButtons.style.display = 'flex';
+                    game.mobileOperationButtons.style.display = 'flex';
+                    return;
+                }
+
+                updateSnake();
+                drawGame();
+            }, game.gameSpeed);
+        }
+
+        function submitScoreToDatabase(id, score) {
+            fetch('/update_score/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken')  // 确保获取 CSRF token
+                },
+                body: `id=${id}&score=${score}`
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络响应错误');
+                    }
+                    return response.json(); // 确保返回 JSON
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        console.log('分数更新成功:', data.new_score);
+                    } else {
+                        console.error('更新失败:', data.message);
+                    }
+                })
+                .catch(error => console.error('请求错误:', error));
+        }
+
+        function updateSnake() {
+            const head = {x: game.snake[0].x + game.direction.x, y: game.snake[0].y + game.direction.y};
+            game.snake.unshift(head);
+
+            if (head.x === game.apple.x && head.y === game.apple.y) {
+                game.score++;
+                game.scoreElement.textContent = game.score;
+                game.apple = placeApple();
+            } else {
+                game.snake.pop();
+            }
+        }
+
+        function drawGame() {
+            game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+            game.ctx.fillStyle = 'blue';
+            game.snake.forEach(segment => {
+                game.ctx.fillRect(segment.x * game.gridSize, segment.y * game.gridSize, game.gridSize, game.gridSize);
+            });
+            game.ctx.drawImage(game.appleImage, game.apple.x * game.gridSize, game.apple.y * game.gridSize, game.gridSize, game.gridSize);
+        }
+
+        function handleKeyPress(event) {
+            switch (event.key) {
+                case 'Shift':
+                    game.gameSpeed = game.gameSpeed === 2000 / 15 ? 1000 / 15 : 2000 / 15;
+                    clearInterval(game.gameInterval);
+                    gameLoop();
+                    break;
+                case 'ArrowUp':
+                    changeDirection('up');
+                    break;
+                case 'ArrowDown':
+                    changeDirection('down');
+                    break;
+                case 'ArrowLeft':
+                    changeDirection('left');
+                    break;
+                case 'ArrowRight':
+                    changeDirection('right');
+                    break;
+            }
+        }
+
+        function changeDirection(dir) {
+            switch (dir) {
+                case 'up':
+                    if (game.direction.y === 0) game.direction = {x: 0, y: -1};
+                    break;
+                case 'down':
+                    if (game.direction.y === 0) game.direction = {x: 0, y: 1};
+                    break;
+                case 'left':
+                    if (game.direction.x === 0) game.direction = {x: -1, y: 0};
+                    break;
+                case 'right':
+                    if (game.direction.x === 0) game.direction = {x: 1, y: 0};
+                    break;
+            }
+        }
+
+        function isGameOver() {
+            const head = game.snake[0];
+            if (head.x < 0 || head.x >= game.tileCount || head.y < 0 || head.y >= game.tileCount) {
+                return true;
+            }
+            for (let i = 1; i < game.snake.length; i++) {
+                if (game.snake[i].x === head.x && game.snake[i].y === head.y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function placeApple() {
+            let newApple;
+            do {
+                newApple = {
+                    x: Math.floor(Math.random() * game.tileCount),
+                    y: Math.floor(Math.random() * game.tileCount),
+                };
+            } while (game.snake.some(segment => segment.x === newApple.x && segment.y === newApple.y));
+            return newApple;
+        }
+
+        function toggleRanklist() {
+            game.ranklistElement.classList.toggle('show');
+            if (game.ranklistElement.classList.contains('show')) {
+                loadRanklist();  // 加载排行榜数据
+            }
+        }
+
+        function loadRanklist() {
+            game.playersElement.innerHTML = ''; // 清空当前列表
+
+            fetch('/get_ranklist/')  // 请求排行榜数据
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络响应错误');
+                    }
+                    return response.json();
+                })
+                .then(players => {
+                    players.forEach(player => {
+                        const playerDiv = document.createElement('div');
+                        playerDiv.className = 'rank-item'; // 添加类名
+                        playerDiv.innerHTML = `
+                        <div style="margin-bottom:8px ;font-size: 16px; text-align: center; /* 水平居中 */
+    display: flex;      /* 使用 flexbox */
+    align-items: center; /* 垂直居中 */
+    height: 70px;     /* 设置高度以便垂直居中 */
+    background-color: #f0f0f0; /* 可选：背景色 */"> 
+                             <img src="${player.avatar || 'https://via.placeholder.com/40'}" alt="${player.username}的头像" style="width: 64px;margin: 16px">
+                            #${player.rank} ${player.username} - ${player.score}分<hr></div>
+                    `;
+                        game.playersElement.appendChild(playerDiv);
+                    });
+                })
+                .catch(error => console.error('获取排行榜失败:', error));
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        window.addEventListener('keydown', handleKeyPress);
+    </script>
+    </body>
+{% endblock content %}
