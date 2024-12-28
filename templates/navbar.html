@@ -1,15 +1,5 @@
 {% load static %}
 <header class="header header--loggedIn">
-    <div id="announcements">
-        <div class="announcements-content">
-            {% for announcement in announcements %}
-            <div class="announcement">
-                <p>{{ announcement.title }} - {{ announcement.content }} - 发布者：{{ announcement.author }} -
-                    发布时间：{{ announcement.created_at }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
     <div class="container">
         <a href="{% url 'home' %}" class="header__logo">
             <img src="{% static 'images/logo.svg' %}"/>
@@ -42,6 +32,7 @@
             </div>
             <div class="dropdown-menu" id="dropdownMenu" style="display: none;">
                 <a href="{% url 'update-user' %}" class="dropdown-link">设置</a>
+                <a href="{% url 'notifications' %}" class="notification-button">通知</a>
                 <a href="{% url 'game' %}" class="dropdown-link">娱乐</a>
                 {% if request.user.is_staff %}  <!-- 检查用户是否为管理员 -->
                 <a href="{% url 'admin:index' %}" class="dropdown-link">管理员</a>  <!-- 管理员链接 -->
@@ -57,6 +48,19 @@
             </div>
             {% endif %}
         </nav>
+    </div>
+    <div id="announcements">
+        <div class="announcements-content">
+            {% for announcement in announcements %}
+            <div class="announcement">
+                <p><span style="font-size: x-large;color: yellow">{{ announcement.title }}</span> -
+                    {{ announcement.content }}
+                    -
+                    <span style="font-size: larger;color: red">发布者：{{ announcement.author }}</span> -
+                    <span style="font-size: larger;color:skyblue ">发布时间：{{ announcement.created_at }}</span></p>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </header>
 
@@ -83,10 +87,13 @@
         }
 
         setInterval(startScrolling, 3000); // 每6秒滚动一次
-
-        // 切换下拉菜单
-        window.toggleDropdown = function () {
+        function toggleDropdown() {
             $('#dropdownMenu').toggle(); // 切换显示状态
         }
+
+        // // 切换下拉菜单
+        // window.toggleDropdown = function () {
+        //     $('#dropdownMenu').toggle(); // 切换显示状态
+        // }
     });
 </script>

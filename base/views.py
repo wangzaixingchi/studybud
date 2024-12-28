@@ -1,7 +1,11 @@
+from datetime import datetime
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
+from django.utils import timezone
+
 from .models import Room, Topic, Message, User, Announcement
 from .forms import RoomForm, UserForm, MyUserCreationForm
 from django.http import HttpResponseRedirect
@@ -109,6 +113,7 @@ def room(request, pk):
 
 from django.db import transaction
 
+
 def toggle_favorite(request, room_id):
     room = get_object_or_404(Room, id=room_id)
     if request.user.is_authenticated:
@@ -122,6 +127,7 @@ def toggle_favorite(request, room_id):
             else:
                 request.user.favorites_rooms.add(room)
     return redirect(request.META.get('HTTP_REFERER', 'home'))
+
 
 def toggle_like(request, message_id):
     if request.method == 'POST':
@@ -300,7 +306,95 @@ def room_list_view(request):
     page_number = request.GET.get('page')  # 获取当前页码
     page_obj = paginator.get_page(page_number)  # 获取当前页的房间对象
 
-    return render(request, 'home.html', {'page_obj': page_obj})
+    return render(request, 'base/home.html', {'page_obj': page_obj})
 
 
-import logging
+@login_required
+def mute_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        if not request.user.is_superuser:
+            return redirect('not-authorized')  # 或者处理未授权的逻辑
+        mute_until = request.POST.get('mute_until')  # 期望格式为 'YYYY-MM-DD HH:MM'
+        mute_reason = request.POST.get('mute_reason')
+        user.mute_until = timezone.datetime.strptime(mute_until, '%Y-%m-%d %H:%M')
+        user.mute_reason = mute_reason
+        user.is_muted = True
+        user.save()
+        return redirect('user-profile', user_id=user.id)
+
+    return render(request, 'base/mute_user.html', {'user': user})
+
+
+from django.contrib import messages
+from .models import Notification
+
+
+@login_required
+def mute_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        mute_until = request.POST.get('mute_until')  # 期望格式为 'YYYY-MM-DD HH:MM'
+        mute_reason = request.POST.get('mute_reason')
+
+        if mute_until:
+            try:
+                # 使用正确的格式解析
+                mute_until_datetime = datetime.strptime(mute_until, '%Y-%m-%dT%H:%M')
+
+                # 转换为 Django 的 timezone-aware 对象
+                mute_until_datetime = timezone.make_aware(mute_until_datetime)
+
+                # 保存到用户对象
+                user.mute_until = mute_until_datetime  # 直接使用已转换的时间
+                user.mute_reason = mute_reason
+                user.is_muted = True
+                user.save()
+            except ValueError as e:
+                print(f"解析错误: {e}")
+        else:
+            print("未获取到 mute_until 值")
+
+        # 添加通知
+        notification_message = f"您已被禁言至 {mute_until}，原因: {mute_reason}"
+        Notification.objects.create(user=user, message=notification_message)
+
+        messages.success(request, f"{user.username} 已被禁言。")
+        return redirect('user-profile', pk=str(user.id))
+
+    return render(request, 'base/mute_user.html', {'user': user})
+
+
+@login_required
+def unmute_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)  # 获取用户对象
+
+    # 检查用户是否是管理员
+    if request.user.is_admin:
+        user.is_muted = False  # 将用户的禁言状态设置为 False
+        user.save()  # 保存更改
+
+        messages.success(request, f"{user.username} 已成功取消禁言。")
+    else:
+        messages.error(request, "您没有权限取消禁言。")
+
+    return redirect('user-profile', pk=str(user.id))  # 重定向到用户资料页面
+
+
+@login_required
+def mark_notification_as_read(request, notification_id):
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    return redirect('notifications')  # 假设您有一个显示通知的页面
+
+
+@login_required  # 确保用户已登录
+def notifications_view(request):
+    # 获取当前用户的通知
+    notifications = request.user.notification_set.all()
+    # 渲染通知模板，传递通知数据
+    return render(request, 'base/notifications.html', {'notifications': notifications})
+
+
+

@@ -1313,12 +1313,69 @@ button.button-not-favorited:hover {
     display: flex; /* 使用 Flexbox */
     white-space: nowrap; /* 防止换行 */
     overflow: hidden; /* 隐藏溢出的内容 */
-    padding: 10px; /* 添加内边距 */
-    background-color: #3F4156; /* 背景色 */
-
+    background-color: #2D2D39; /* 背景色 */
+    margin-top: 10px;
     border-radius: 5px; /* 圆角 */
 }
 
 .announcement {
     margin-right: 20px; /* 公告之间的间距 */
+}
+/* 通知页面样式 */
+.notification-page {
+    font-family: Arial, sans-serif;
+
+    margin: 0;
+    padding: 20px;
+}
+
+.notification-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-navbar a {
+    text-decoration: none;
+}
+
+.notification-navbar a:hover {
+    background-color: #0f1a3f;
+}
+
+/* 通知标题样式 */
+.notification-title {
+    margin-top: 20px;
+}
+
+/* 通知列表样式 */
+.notification-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.notification-item {
+    border-radius: 5px;
+    padding: 15px;
+    transition: box-shadow 0.3s;
+}
+
+.notification-item:hover {
+
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 时间戳样式 */
+.notification-timestamp {
+    color: #888;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+/* 空通知样式 */
+.empty-notification {
+    color: #999;
+    font-style: italic;
+    text-align: center;
+    margin: 20px 0;
 }

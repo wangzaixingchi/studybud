@@ -22,6 +22,35 @@
                             <a href="{% url 'update-user' %}" class="btn btn--main btn--pill">编辑资料</a>
                         {% endif %}
                     </div>
+
+                    {% if user.is_muted %}
+                        <div class="alert alert-warning">
+                            此用户已被禁言<br>
+                            原因: {{ user.mute_reason }}<br>
+                            禁用至: {{ user.mute_until|date:"Y-m-d H:i:s" }}
+                        </div>
+                        {% if request.user.is_superuser %}  <!-- 仅管理员可以取消禁言 -->
+                            <form method="post" action="{% url 'unmute-user' user.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn--main btn--pill">取消禁言</button>
+                            </form>
+                        {% endif %}
+                    {% elif not user.is_superuser %}  <!-- 只对非管理员显示禁言按钮 -->
+                        <button class="btn btn--main btn--pill" id="mute-button" onclick="toggleMuteForm()">禁言
+                        </button>
+                        <form id="mute-form" method="post" action="{% url 'mute-user' user.id %}"
+                              style="display: none;">
+                            {% csrf_token %}
+                            <label for="mute_reason">禁言原因:</label>
+                            <input type="text" name="mute_reason" required>
+
+                            <label for="mute_until">禁言到期时间:</label>
+                            <input type="datetime-local" name="mute_until" required>
+
+                            <button type="submit">禁用</button>
+                        </form>
+                    {% endif %}
+
                     <div class="profile__about">
                         <h3>简介</h3>
                         <p>{{ user.bio }}</p>
@@ -30,12 +59,16 @@
 
                 <div class="roomList__header">
                     <div style="display: flex; width: 100%;">
-                        <a id="my-rooms" href="#" style="flex: 1; text-align: center;" class="active" onclick="loadContent('rooms')">
-                            我的房间
+                        <a id="my-rooms" href="#" style="flex: 1; text-align: center;" class="active"
+                           onclick="loadContent('rooms')">
+                            房间
                         </a>
-                        <a id="my-favorites" href="#" style="flex: 1; text-align: center;" onclick="loadContent('favorites')">
+                         {% if request.user == user %}
+                        <a id="my-favorites" href="#" style="flex: 1; text-align: center;"
+                           onclick="loadContent('favorites')">
                             我的收藏
                         </a>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -61,13 +94,28 @@
             font-weight: bold;
             color: #007BFF; /* 或其他您希望的颜色 */
         }
+
         a:hover {
             text-decoration: underline; /* 鼠标悬浮效果 */
             color: #0056b3; /* 鼠标悬浮时的颜色 */
         }
+
+        .alert {
+            background-color: #fff3cd;
+            border-color: #ffeeba;
+            color: #856404;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
     </style>
 
     <script>
+        function toggleMuteForm() {
+            const form = document.getElementById('mute-form');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
         function loadContent(tab) {
             const roomsContent = document.getElementById('rooms-content');
             const favoritesContent = document.getElementById('favorites-content');

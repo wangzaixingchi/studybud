@@ -13,6 +13,9 @@ class User(AbstractUser):
     updated = models.DateTimeField(auto_now=True)  # 更新时间
     USERNAME_FIELD = 'email'  # 设置用户名字段为邮箱
     REQUIRED_FIELDS = []  # 创建用户时不需要额外字段
+    is_muted = models.BooleanField(default=False)
+    mute_reason = models.CharField(max_length=255, blank=True, null=True)
+    mute_until = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return self.email  # 返回用户邮箱
@@ -70,3 +73,13 @@ class Announcement(models.Model):
 
     def __str__(self):
         return self.title  # 返回公告标题
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.username}: {self.message}"

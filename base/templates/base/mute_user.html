@@ -1,0 +1,10 @@
+<form method="post">
+    {% csrf_token %}
+    <label for="mute_reason">禁言原因:</label>
+    <input type="text" name="mute_reason" required>
+
+    <label for="mute_until">禁言到期时间:</label>
+    <input type="datetime-local" name="mute_until" required>
+
+    <button type="submit">禁言用户</button>
+</form>

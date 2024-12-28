@@ -119,7 +119,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "zh-hans"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = 'Asia/Shanghai'  # 或者您所在城市的时区
 
 USE_I18N = True
 
@@ -145,7 +145,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOW_ALL_ORIGINS =True
 
-
+#
 # LOGGING = {
 #     'version': 1,
 #     'disable_existing_loggers': False,

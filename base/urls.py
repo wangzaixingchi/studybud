@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 from django.contrib import admin
+
 urlpatterns = [
     path('login/', views.loginPage, name="login"),
     path('logout/', views.logoutUser, name="logout"),
@@ -25,5 +26,10 @@ urlpatterns = [
     path('room/<int:room_id>/toggle_favorite/', views.toggle_favorite, name='toggle_favorite'),
     path('message/<int:message_id>/toggle-like/', views.toggle_like, name='toggle_like'),
     path('my-favorites/', views.my_favorites, name='my-favorites'),
+    path('mute-user/<int:user_id>/', views.mute_user, name='mute-user'),
+    path('unmute-user/<int:user_id>/', views.unmute_user, name='unmute-user'),
+    path('notifications/read/<int:notification_id>/', views.mark_notification_as_read,
+         name='mark-notification-as-read'),
+    path('notifications/', views.notifications_view, name='notifications'),
 
 ]
