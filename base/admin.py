@@ -8,6 +8,11 @@ admin.site.register(Message)
 # base/admin.py
 
 from django.contrib import admin
+
+admin.site.site_header = "聊天室管理"
+admin.site.site_title = "网站后台"
+admin.site.index_title = "欢迎来到聊天室管理后台"
+from django.contrib import admin
 from .models import Announcement
 
 @admin.register(Announcement)

@@ -38,9 +38,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    
+
     'base.apps.BaseConfig',
-    
+    'base.templatetags',
     'rest_framework',
     'corsheaders',
 ]
@@ -48,17 +48,17 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL='base.User'
 
 MIDDLEWARE = [
-    
+
     "django.middleware.security.SecurityMiddleware",
     'corsheaders.middleware.CorsMiddleware',
-    
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    
+
 ]
 
 ROOT_URLCONF = "studybud.urls"

@@ -1,5 +1,7 @@
+import hashlib
 from datetime import datetime
 
+from cryptography.fernet import Fernet
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -13,6 +15,17 @@ from django.contrib.auth import authenticate, login, logout
 from .forms import MessageForm
 from django.contrib import messages
 from django.core.paginator import Paginator
+
+
+def get_room_info(room):
+    room_messages = room.message_set.all()
+    participants = room.participants.all()
+    return room_messages, participants
+
+
+def check_password(room, entered_password):
+    hashed_password = hashlib.md5((entered_password + 'wangzaixiaoqi').encode()).hexdigest()
+    return hashed_password == room.encryption_key
 
 
 def loginPage(request):
@@ -78,37 +91,72 @@ def home(request):
 
 def room(request, pk):
     room = get_object_or_404(Room, id=pk)
-    room_messages = room.message_set.all()
-    participants = room.participants.all()
 
     if not request.user.is_authenticated:
         return redirect('/login/')
 
+    room_messages, participants = get_room_info(room)
+
+    # 检查房间是否加密
+    if room.is_encrypted:
+        # 检查用户是否已通过密码验证
+        if request.session.get(f'room_access_{room.id}', False):
+            # 用户已验证，允许访问
+            if request.method == 'POST':
+                return handle_message_post(request, room)
+
+            context = {
+                'room': room,
+                'room_messages': room_messages,
+                'participants': participants,
+            }
+            return render(request, 'base/room.html', context)
+
+        else:
+            # 处理密码输入
+            if request.method == 'POST':
+                entered_password = request.POST.get('encryption_key')
+
+                if check_password(room, entered_password):
+                    request.session[f'room_access_{room.id}'] = True  # 设置当前房间的访问权限
+                    return redirect('room', pk=room.id)  # 重定向到当前房间页面
+                else:
+                    error_message = "密码错误，请重试。"
+
+            context = {
+                'room': room,
+            }
+            return render(request, 'base/room_secret.html', context)  # 跳转到房间密码输入页面
+
+    # 如果房间未加密，允许用户发送消息
     if request.method == 'POST':
-        # 获取请求中的文件
-        body = request.POST.get('body')
-        image = request.FILES.get('image')  # 获取上传的图片
-        video = request.FILES.get('video')  # 获取上传的视频
-
-        # 创建消息对象，保存文本和图片
-        message = Message.objects.create(
-            user=request.user,
-            room=room,
-            body=body,
-            image=image,  # 保存图片
-            video=video  # 保存视频
-        )
-
-        room.participants.add(request.user)
-        return redirect('room', pk=room.id)
+        return handle_message_post(request, room)
 
     context = {
         'room': room,
         'room_messages': room_messages,
         'participants': participants,
-
     }
     return render(request, 'base/room.html', context)
+
+def handle_message_post(request, room):
+    """处理消息发送的逻辑"""
+    body = request.POST.get('body')
+    image = request.FILES.get('image')
+    video = request.FILES.get('video')
+    # 检查 body、image 和 video 是否都为空
+    if not body and not image and not video:
+        # 直接返回，不处理消息
+        return redirect('room', pk=room.id)
+    Message.objects.create(
+        user=request.user,
+        room=room,
+        body=body,
+        image=image,
+        video=video
+    )
+    room.participants.add(request.user)
+    return redirect('room', pk=room.id)
 
 
 from django.db import transaction
@@ -151,21 +199,28 @@ def my_favorites(request):
 def createRoom(request):
     form = RoomForm()
     topics = Topic.objects.all()
+
     if request.method == 'POST':
         topic_name = request.POST.get('topic')
         topic, created = Topic.objects.get_or_create(name=topic_name)
+
+        # 检查是否需要加密
+        is_encrypted = request.POST.get('is_encrypted') == 'on'  # 对应复选框的值
+        encryption_key = None
+
+        if is_encrypted:
+            # 生成 MD5 哈希，使用盐值增强安全性
+            encryption_key = hashlib.md5((request.POST.get('encryption_key') + 'wangzaixiaoqi').encode()).hexdigest()
+
         Room.objects.create(
             host=request.user,
             topic=topic,
             name=request.POST.get('name'),
             description=request.POST.get('description'),
+            encryption_key=encryption_key,  # 存储 MD5 哈希
+            is_encrypted=is_encrypted  # 设置加密状态
         )
-        # form =RoomForm(request.POST)
-        # if form.is_valid():
-        #     room =form.save(commit=False)
-        #     room.host =request.user
-        #     room.save()
-        return redirect('home')
+        return redirect('home')  # 创建成功后重定向到主页
 
     context = {'form': form, "topics": topics}
     return render(request, 'base/room_form.html', context)
@@ -188,20 +243,35 @@ def userProfile(request, pk):
 
 @login_required(login_url='/login')
 def updateRoom(request, pk):
-    room = Room.objects.get(id=pk)
+    room = get_object_or_404(Room, id=pk)  # 使用 get_object_or_404 获取房间
     form = RoomForm(instance=room)
     topics = Topic.objects.all()
+
     if request.user != room.host:
         return HttpResponse('NO!!!')
 
     if request.method == 'POST':
         topic_name = request.POST.get('topic')
         topic, created = Topic.objects.get_or_create(name=topic_name)
+
         room.name = request.POST.get('name')
         room.topic = topic
         room.description = request.POST.get('description')
-        return redirect('home')
-    context = {'form': form, "topics": topics, 'room': room}
+
+        # 检查是否需要更新加密
+        is_encrypted = request.POST.get('is_encrypted') == 'on'  # 对应复选框的值
+        encryption_key = None
+
+        if is_encrypted:
+            encryption_key = hashlib.md5((request.POST.get('encryption_key') + 'wangzaixiaoqi').encode()).hexdigest()
+
+        room.is_encrypted = is_encrypted  # 更新加密状态
+        room.encryption_key = encryption_key if is_encrypted else None  # 存储加密密钥
+
+        room.save()  # 保存房间更改
+        return redirect('home')  # 更新成功后重定向到主页
+
+    context = {'form': form, 'topics': topics, 'room': room}
     return render(request, 'base/room_form.html', context)
 
 
@@ -370,7 +440,7 @@ def unmute_user(request, user_id):
     user = get_object_or_404(User, id=user_id)  # 获取用户对象
 
     # 检查用户是否是管理员
-    if request.user.is_admin:
+    if request.user.is_superuser:
         user.is_muted = False  # 将用户的禁言状态设置为 False
         user.save()  # 保存更改
 
@@ -395,6 +465,3 @@ def notifications_view(request):
     notifications = request.user.notification_set.all()
     # 渲染通知模板，传递通知数据
     return render(request, 'base/notifications.html', {'notifications': notifications})
-
-
-

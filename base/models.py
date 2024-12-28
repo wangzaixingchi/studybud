@@ -1,3 +1,4 @@
+from cryptography.fernet import Fernet
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -39,12 +40,19 @@ class Room(models.Model):
     created = models.DateTimeField(auto_now_add=True)  # 创建时间
     updated = models.DateTimeField(auto_now=True)  # 更新时间
     favorites = models.ManyToManyField(User, related_name='favorite_rooms', blank=True)  # 收藏的房间
+    encryption_key = models.CharField(max_length=255, blank=True, null=True)  # 加密密钥
+    is_encrypted = models.BooleanField(default=False)  # 标记房间是否加密
 
     class Meta:
         ordering = ['-updated', 'created']  # 按更新时间和创建时间排序
 
     def __str__(self):
         return self.name
+
+    def generate_encryption_key(self):
+        self.encryption_key = Fernet.generate_key().decode()  # 生成新的加密密钥
+        self.is_encrypted = True  # 设置加密状态为 True
+        self.save()
 
 
 class Message(models.Model):
@@ -56,12 +64,21 @@ class Message(models.Model):
     created = models.DateTimeField(auto_now_add=True)  # 创建时间
     updated = models.DateTimeField(auto_now=True)  # 更新时间
     likes = models.ManyToManyField(User, related_name='liked_messages', blank=True)  # 点赞的用户
+    encrypted_body = models.TextField(blank=True, null=True)  # 存储加密后的消息内容
 
     class Meta:
         ordering = ['-updated', 'created']  # 按更新时间和创建时间排序
 
     def __str__(self):
         return self.body[0:50]  # 返回消息前50个字符
+
+    def encrypt_message(self, key):
+        fernet = Fernet(key.encode())
+        self.encrypted_body = fernet.encrypt(self.body.encode()).decode()
+
+    def decrypt_message(self, key):
+        fernet = Fernet(key.encode())
+        return fernet.decrypt(self.encrypted_body.encode()).decode()
 
 
 class Announcement(models.Model):
