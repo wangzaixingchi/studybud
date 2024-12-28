@@ -1167,215 +1167,229 @@ a {
     font-weight: 1.4rem;
 }
 
-.room__message {
-    background-color: #3F4156; /* 背景颜色 */
-    border-radius: 5px; /* 圆角 */
-    padding: 15px; /* 内边距 */
+/*.room__message {*/
+/*    background-color: #3F4156; !* 背景颜色 *!*/
+/*    border-radius: 5px; !* 圆角 *!*/
+/*    padding: 15px; !* 内边距 *!*/
 
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 阴影效果 */
-}
+/*    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); !* 阴影效果 *!*/
+/*}*/
 
-.message-form {
-    display: flex; /* 使用 Flexbox 布局 */
-    width: 100%; /* 确保表单宽度为100% */
-}
+/*.message-form {*/
+/*    display: flex; !* 使用 Flexbox 布局 *!*/
+/*    width: 100%; !* 确保表单宽度为100% *!*/
+/*}*/
+
+/*.input-container {*/
+/*    display: flex; !* 将输入框和按钮放在同一行 *!*/
+/*    align-items: center; !* 垂直居中对齐 *!*/
+/*    flex: 1; !* 输入区域占满剩余空间 *!*/
+/*}*/
+
+/*.message-input {*/
+/*    flex: 1; !* 输入框占满剩余空间 *!*/
+/*    padding: 10px; !* 内边距 *!*/
+/*    border: 1px solid #ccc; !* 边框 *!*/
+/*    border-radius: 5px; !* 圆角 *!*/
+/*    font-size: 16px; !* 字体大小 *!*/
+/*    margin-right: 5px; !* 右外边距，避免与按钮重叠 *!*/
+/*}*/
+
+/*.btn {*/
+/*    background-color: #43b2d0; !* 悬停时的背景颜色 *!*/
+/*    color: white; !* 字体颜色 *!*/
+/*    border: none; !* 无边框 *!*/
+/*    border-radius: 5px; !* 圆角 *!*/
+/*    padding: 10px 15px; !* 内边距 *!*/
+/*    cursor: pointer; !* 鼠标指针样式 *!*/
+/*    transition: background-color 0.3s; !* 背景颜色过渡效果 *!*/
+/*}*/
+
+/*.btn:hover {*/
+/*    background-color: #538ac5; !* 悬停时的背景颜色 *!*/
+/*}*/
+
+/*.image-preview {*/
+/*    margin-left: 10px; !* 左外边距 *!*/
+/*    border-radius: 5px; !* 圆角 *!*/
+/*    border: 1px dashed #ccc; !* 虚线边框 *!*/
+/*}*/
+
+/*#uploadButton {*/
+/*    background-color: #28a745; !* 上传按钮背景颜色 *!*/
+/*}*/
+
+/*#uploadButton:hover {*/
+/*    background-color: #218838; !* 上传按钮悬停颜色 *!*/
+/*}*/
+
+/*.avatar img {*/
+/*    width: 100%;*/
+/*    height: auto;*/
+/*}*/
+
+/*.pagination {*/
+/*    display: flex;*/
+/*    justify-content: center;*/
+/*    align-items: center;*/
+/*    bottom: 0; !* 距离底部 0 像素 *!*/
+/*    left: 0; !* 距离左侧 0 像素 *!*/
+/*    right: 0; !* 距离右侧 0 像素 *!*/
+/*    padding: 10px; !* 内边距 *!*/
+
+/*    display: flex; !* 使用 flexbox 布局 *!*/
+/*    justify-content: space-between; !* 两侧对齐 *!*/
+/*    align-items: center; !* 垂直居中 *!*/
+/*    z-index: 1000; !* 确保在其他内容之上 *!*/
+/*}*/
+
+/*.pagination button {*/
+/*    margin: 0 5px;*/
+/*    padding: 5px 10px;*/
+/*    border: none;*/
+/*    background-color: #589fb2;*/
+/*    color: white;*/
+/*    border-radius: 5px;*/
+/*    cursor: pointer;*/
+/*}*/
+
+/*.pagination button:disabled {*/
+/*    background-color: #cccccc;*/
+/*}*/
+
+/*.like-button {*/
+/*    position: relative;*/
+/*    display: inline-block;*/
+/*    cursor: pointer;*/
+/*    transition: transform 0.2s;*/
+/*}*/
+
+/*.like-button.liked {*/
+/*    color: red; !* 点赞后的颜色 *!*/
+/*    transform: scale(1.2); !* 放大效果 *!*/
+/*}*/
+
+/*@keyframes like-animation {*/
+/*    0% {*/
+/*        transform: scale(1);*/
+/*    }*/
+/*    50% {*/
+/*        transform: scale(1.5);*/
+/*    }*/
+/*    100% {*/
+/*        transform: scale(1);*/
+/*    }*/
+/*}*/
+
+/*.like-animation {*/
+/*    animation: like-animation 0.5s ease;*/
+/*}*/
+
+/*!* 仅在 favorited 类下生效 *!*/
+/*button.button-favorited {*/
+/*    background-color: #e74c3c; !* 红色背景 *!*/
+/*    color: white; !* 白色文字 *!*/
+/*}*/
+
+/*button.button-favorited:hover {*/
+/*    background-color: #c0392b; !* 深红色悬停 *!*/
+/*}*/
+
+/*!* 仅在 not-favorited 类下生效 *!*/
+/*button.button-not-favorited {*/
+/*    background-color: #3498db; !* 蓝色背景 *!*/
+/*    color: white; !* 白色文字 *!*/
+/*}*/
+
+/*button.button-not-favorited:hover {*/
+/*    background-color: #2980b9; !* 深蓝色悬停 *!*/
+/*}*/
+
+/*#announcements {*/
+/*    overflow: hidden; !* 确保内容不会溢出 *!*/
+/*}*/
+
+/*.announcements-content {*/
+/*    display: flex; !* 使用 Flexbox *!*/
+/*    white-space: nowrap; !* 防止换行 *!*/
+/*    overflow: hidden; !* 隐藏溢出的内容 *!*/
+/*    background-color: #2D2D39; !* 背景色 *!*/
+/*    margin-top: 10px;*/
+/*    border-radius: 5px; !* 圆角 *!*/
+/*}*/
+
+/*.announcement {*/
+/*    margin-right: 20px; !* 公告之间的间距 *!*/
+/*}*/
+/*!* 通知页面样式 *!*/
+/*.notification-page {*/
+/*    font-family: Arial, sans-serif;*/
+
+/*    margin: 0;*/
+/*    padding: 20px;*/
+/*}*/
+
+/*.notification-navbar {*/
+/*    display: flex;*/
+/*    justify-content: space-between;*/
+/*    align-items: center;*/
+/*}*/
+
+/*.notification-navbar a {*/
+/*    text-decoration: none;*/
+/*}*/
+
+/*.notification-navbar a:hover {*/
+/*    background-color: #0f1a3f;*/
+/*}*/
+
+/*!* 通知标题样式 *!*/
+/*.notification-title {*/
+/*    margin-top: 20px;*/
+/*}*/
+
+/*!* 通知列表样式 *!*/
+/*.notification-list {*/
+/*    list-style-type: none;*/
+/*    padding: 0;*/
+/*}*/
+
+/*.notification-item {*/
+/*    border-radius: 5px;*/
+/*    padding: 15px;*/
+/*    transition: box-shadow 0.3s;*/
+/*}*/
+
+/*.notification-item:hover {*/
+
+/*    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);*/
+/*}*/
+
+/*!* 时间戳样式 *!*/
+/*.notification-timestamp {*/
+/*    color: #888;*/
+/*    font-size: 0.9em;*/
+/*    margin-top: 5px;*/
+/*}*/
+
+/*!* 空通知样式 *!*/
+/*.empty-notification {*/
+/*    color: #999;*/
+/*    font-style: italic;*/
+/*    text-align: center;*/
+/*    margin: 20px 0;*/
+/*}*/
 
 .input-container {
-    display: flex; /* 将输入框和按钮放在同一行 */
+    display: flex; /* 使用 Flexbox */
     align-items: center; /* 垂直居中对齐 */
-    flex: 1; /* 输入区域占满剩余空间 */
 }
 
 .message-input {
-    flex: 1; /* 输入框占满剩余空间 */
-    padding: 10px; /* 内边距 */
-    border: 1px solid #ccc; /* 边框 */
-    border-radius: 5px; /* 圆角 */
-    font-size: 16px; /* 字体大小 */
-    margin-right: 5px; /* 右外边距，避免与按钮重叠 */
-}
-
-.btn {
-    background-color: #43b2d0; /* 悬停时的背景颜色 */
-    color: white; /* 字体颜色 */
-    border: none; /* 无边框 */
-    border-radius: 5px; /* 圆角 */
-    padding: 10px 15px; /* 内边距 */
-    cursor: pointer; /* 鼠标指针样式 */
-    transition: background-color 0.3s; /* 背景颜色过渡效果 */
-}
-
-.btn:hover {
-    background-color: #538ac5; /* 悬停时的背景颜色 */
+    flex: 1; /* 填充剩余空间 */
+    margin-right: 10px; /* 右侧间距 */
 }
 
 .image-preview {
-    margin-left: 10px; /* 左外边距 */
-    border-radius: 5px; /* 圆角 */
-    border: 1px dashed #ccc; /* 虚线边框 */
-}
-
-#uploadButton {
-    background-color: #28a745; /* 上传按钮背景颜色 */
-}
-
-#uploadButton:hover {
-    background-color: #218838; /* 上传按钮悬停颜色 */
-}
-
-.avatar img {
-    width: 100%;
-    height: auto;
-}
-
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    bottom: 0; /* 距离底部 0 像素 */
-    left: 0; /* 距离左侧 0 像素 */
-    right: 0; /* 距离右侧 0 像素 */
-    padding: 10px; /* 内边距 */
-
-    display: flex; /* 使用 flexbox 布局 */
-    justify-content: space-between; /* 两侧对齐 */
-    align-items: center; /* 垂直居中 */
-    z-index: 1000; /* 确保在其他内容之上 */
-}
-
-.pagination button {
-    margin: 0 5px;
-    padding: 5px 10px;
-    border: none;
-    background-color: #589fb2;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.pagination button:disabled {
-    background-color: #cccccc;
-}
-
-.like-button {
-    position: relative;
-    display: inline-block;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.like-button.liked {
-    color: red; /* 点赞后的颜色 */
-    transform: scale(1.2); /* 放大效果 */
-}
-
-@keyframes like-animation {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.5);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
-.like-animation {
-    animation: like-animation 0.5s ease;
-}
-
-/* 仅在 favorited 类下生效 */
-button.button-favorited {
-    background-color: #e74c3c; /* 红色背景 */
-    color: white; /* 白色文字 */
-}
-
-button.button-favorited:hover {
-    background-color: #c0392b; /* 深红色悬停 */
-}
-
-/* 仅在 not-favorited 类下生效 */
-button.button-not-favorited {
-    background-color: #3498db; /* 蓝色背景 */
-    color: white; /* 白色文字 */
-}
-
-button.button-not-favorited:hover {
-    background-color: #2980b9; /* 深蓝色悬停 */
-}
-
-#announcements {
-    overflow: hidden; /* 确保内容不会溢出 */
-}
-
-.announcements-content {
-    display: flex; /* 使用 Flexbox */
-    white-space: nowrap; /* 防止换行 */
-    overflow: hidden; /* 隐藏溢出的内容 */
-    background-color: #2D2D39; /* 背景色 */
-    margin-top: 10px;
-    border-radius: 5px; /* 圆角 */
-}
-
-.announcement {
-    margin-right: 20px; /* 公告之间的间距 */
-}
-/* 通知页面样式 */
-.notification-page {
-    font-family: Arial, sans-serif;
-
-    margin: 0;
-    padding: 20px;
-}
-
-.notification-navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.notification-navbar a {
-    text-decoration: none;
-}
-
-.notification-navbar a:hover {
-    background-color: #0f1a3f;
-}
-
-/* 通知标题样式 */
-.notification-title {
-    margin-top: 20px;
-}
-
-/* 通知列表样式 */
-.notification-list {
-    list-style-type: none;
-    padding: 0;
-}
-
-.notification-item {
-    border-radius: 5px;
-    padding: 15px;
-    transition: box-shadow 0.3s;
-}
-
-.notification-item:hover {
-
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* 时间戳样式 */
-.notification-timestamp {
-    color: #888;
-    font-size: 0.9em;
-    margin-top: 5px;
-}
-
-/* 空通知样式 */
-.empty-notification {
-    color: #999;
-    font-style: italic;
-    text-align: center;
-    margin: 20px 0;
+    margin-left: 10px; /* 左侧间距 */
 }

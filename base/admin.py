@@ -31,3 +31,22 @@ class UserAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 admin.site.register(User, UserAdmin)
+
+from django.contrib import admin
+from django.templatetags.static import static
+
+class CustomAdminSite(admin.AdminSite):
+    site_header = "我的网站管理"
+    site_title = "网站后台"
+    index_title = "欢迎来到网站管理后台"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        return urls
+
+    def get_extra_context(self, request):
+        return {
+            'custom_css': static('your_app/css/custom_admin.css'),
+        }
+
+admin_site = CustomAdminSite(name='custom_admin')

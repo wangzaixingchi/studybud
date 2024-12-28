@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
+from django.urls import reverse
 from django.utils import timezone
 
 from .models import Room, Topic, Message, User, Announcement
@@ -15,19 +16,22 @@ from django.contrib.auth import authenticate, login, logout
 from .forms import MessageForm
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Announcement
+from .forms import AnnouncementForm
 
-
+# 获取房间信息
 def get_room_info(room):
     room_messages = room.message_set.all()
     participants = room.participants.all()
     return room_messages, participants
 
-
+# 校验密码
 def check_password(room, entered_password):
     hashed_password = hashlib.md5((entered_password + 'wangzaixiaoqi').encode()).hexdigest()
     return hashed_password == room.encryption_key
 
-
+# 登录
 def loginPage(request):
     page = 'login'
     if request.user.is_authenticated:
@@ -49,12 +53,12 @@ def loginPage(request):
     context = {'page': page}
     return render(request, 'base/login_register.html', context)
 
-
+# 退出登录
 def logoutUser(request):
     logout(request)
     return redirect('home')
 
-
+# 注册页面
 def registerPage(request):
     form = MyUserCreationForm()
     if request.method == 'POST':
@@ -70,7 +74,7 @@ def registerPage(request):
 
     return render(request, 'base/login_register.html', {'form': form})
 
-
+# 主页
 def home(request):
     q = request.GET.get('q') if request.GET.get('q') != None else ''
     print(q)
@@ -88,7 +92,7 @@ def home(request):
                'room_count': room_count, 'room_messages': room_messages, 'announcements': announcements}
     return render(request, 'base/home.html', context)
 
-
+# 房间页面
 def room(request, pk):
     room = get_object_or_404(Room, id=pk)
 
@@ -138,7 +142,7 @@ def room(request, pk):
         'participants': participants,
     }
     return render(request, 'base/room.html', context)
-
+# 发送信息
 def handle_message_post(request, room):
     """处理消息发送的逻辑"""
     body = request.POST.get('body')
@@ -147,7 +151,7 @@ def handle_message_post(request, room):
     # 检查 body、image 和 video 是否都为空
     if not body and not image and not video:
         # 直接返回，不处理消息
-        return redirect('room', pk=room.id)
+        return
     Message.objects.create(
         user=request.user,
         room=room,
@@ -161,7 +165,7 @@ def handle_message_post(request, room):
 
 from django.db import transaction
 
-
+# 房间收藏
 def toggle_favorite(request, room_id):
     room = get_object_or_404(Room, id=room_id)
     if request.user.is_authenticated:
@@ -174,9 +178,13 @@ def toggle_favorite(request, room_id):
                 request.user.favorites_rooms.remove(room)
             else:
                 request.user.favorites_rooms.add(room)
-    return redirect(request.META.get('HTTP_REFERER', 'home'))
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
+    else:
+        return redirect(reverse('home'))  # 使用 reverse 确保 URL 存在
 
-
+# 评论点赞
 def toggle_like(request, message_id):
     if request.method == 'POST':
         message = get_object_or_404(Message, id=message_id)
@@ -188,13 +196,13 @@ def toggle_like(request, message_id):
         return JsonResponse({'liked': request.user in message.likes.all()})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
-
+# 我的收藏
 def my_favorites(request):
     # 获取当前用户的收藏房间
     favorites = request.user.favorites.all()  # 获取当前用户收藏的所有房间
     return render(request, 'base/feed_component_favorite.html', {'favorites': favorites})
 
-
+# 创建房间
 @login_required(login_url='/login')
 def createRoom(request):
     form = RoomForm()
@@ -225,7 +233,7 @@ def createRoom(request):
     context = {'form': form, "topics": topics}
     return render(request, 'base/room_form.html', context)
 
-
+# 用户资料
 def userProfile(request, pk):
     user = User.objects.get(id=pk)
     rooms = user.room_set.all()
@@ -240,7 +248,7 @@ def userProfile(request, pk):
         'favorites': favorites}
     return render(request, 'base/profile.html', context)
 
-
+# 更新房间
 @login_required(login_url='/login')
 def updateRoom(request, pk):
     room = get_object_or_404(Room, id=pk)  # 使用 get_object_or_404 获取房间
@@ -274,7 +282,7 @@ def updateRoom(request, pk):
     context = {'form': form, 'topics': topics, 'room': room}
     return render(request, 'base/room_form.html', context)
 
-
+# 删除房间
 @login_required(login_url='/login')
 def deleteRoom(request, pk):
     room = Room.objects.get(id=pk)
@@ -285,7 +293,7 @@ def deleteRoom(request, pk):
         return redirect('home')
     return render(request, 'base/delete.html', {'obj': room})
 
-
+# 删除信息
 @login_required(login_url='/login')
 def deleteMessage(request, pk):
     message = Message.objects.get(id=pk)
@@ -458,10 +466,61 @@ def mark_notification_as_read(request, notification_id):
     notification.save()
     return redirect('notifications')  # 假设您有一个显示通知的页面
 
-
+# 通知列表
 @login_required  # 确保用户已登录
 def notifications_view(request):
     # 获取当前用户的通知
     notifications = request.user.notification_set.all()
     # 渲染通知模板，传递通知数据
     return render(request, 'base/notifications.html', {'notifications': notifications})
+
+
+# 公告列表
+def announcement_list(request):
+    announcements = Announcement.objects.all()
+    return render(request, 'base/announcement_list.html', {'announcements': announcements})
+
+# 编辑公告
+def edit_announcement(request, announcement_id=None):
+    if announcement_id:
+        announcement = get_object_or_404(Announcement, id=announcement_id)
+    else:
+        announcement = None
+
+    if request.method == 'POST':
+        form = AnnouncementForm(request.POST, instance=announcement)
+        if form.is_valid():
+            new_announcement = form.save(commit=False)  # 不立即保存
+            new_announcement.author = request.user  # 设置作者为当前用户
+            form.save()
+            return redirect('announcement_list')  # 编辑或创建成功后重定向
+    else:
+        form = AnnouncementForm(instance=announcement)
+
+    return render(request, 'base/edit_announcement.html', {'form': form, 'announcement': announcement})
+
+# 删除公告
+@login_required
+def delete_announcement(request, announcement_id):
+    announcement = get_object_or_404(Announcement, id=announcement_id)
+
+    if request.method == 'POST':
+        announcement.delete()
+        messages.success(request, '公告已成功删除。')
+        return redirect('announcement_list')
+
+    # 不需要返回确认页面
+    return redirect('announcement_list')  # 默认情况下重定向到公告列表
+
+# 添加好友
+@login_required
+def add_friend(request, user_id):
+    friend = get_object_or_404(User, id=user_id)
+
+    if request.user == friend:
+        messages.error(request, "不能添加自己为好友。")
+    else:
+        request.user.userprofile.friends.add(friend)
+        messages.success(request, f"已成功添加 {friend.username} 为好友。")
+
+    return redirect(request.META.get('HTTP_REFERER', 'home'))  # 返回到上一页或主页

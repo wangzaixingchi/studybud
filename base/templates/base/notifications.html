@@ -1,17 +1,19 @@
-{%extends 'main.html'%}
+{% extends 'main.html' %}
 
-{%block content%}
-<main class="layout layout--3">
-<h3 class="notification-title">通知</h3>
-<ul class="notification-list">
-    {% for notification in notifications %}
-        <li class="notification-item">
-            {{ notification.message }}
-            <span class="notification-timestamp">{{ notification.timestamp }}</span>
-        </li>
-    {% empty %}
-        <li class="empty-notification">没有通知</li>
-    {% endfor %}
-</ul>
-<main>
-{%endblock content%}
+{% block content %}
+<main class="layout layout--3 container mt-5">
+    <h3 class="notification-title text-center text-primary mb-4">通知</h3>
+    <ul class="notification-list list-group">
+        {% for notification in notifications %}
+            <li class="notification-item list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    {{ notification.message }}
+                </div>
+                <span class="notification-timestamp text-muted">{{ notification.timestamp }}</span>
+            </li>
+        {% empty %}
+            <li class="empty-notification list-group-item text-center">没有通知</li>
+        {% endfor %}
+    </ul>
+</main>
+{% endblock %}

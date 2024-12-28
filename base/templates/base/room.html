@@ -44,41 +44,41 @@
                         </div>
                     {% endif %}
                 </div>
-                    <div class="room__box scroll">
-                        <div class="room__header scroll">
-                            <div class="room__info">
-                                <h3>{{ room.name }}</h3>
-                                {% if user in room.favorites.all %}
-                                    <button class="btn">⭐已收藏</button>
-                                {% endif %}
-                                <span>{{ room.created|timesince }}以前</span>
-                            </div>
-                            <div class="room__hosted">
-                                <p>主题</p>
-                                <a href="{% url 'user-profile' room.host.id %}" class="room__author">
-                                    <div class="avatar avatar--small">
-                                        <img src="{{ room.host.avatar.url }}"/>
-                                    </div>
-                                    <span>@{{ room.host.username }}</span>
-                                </a>
-                            </div>
-                            <span class="room__topics">{{ room.topic }}</span>
+                <div class="room__box scroll">
+                    <div class="room__header scroll">
+                        <div class="room__info">
+                            <h3>{{ room.name }}</h3>
+                            {% if user in room.favorites.all %}
+                                <button class="btn" style="background-color: #2e6da4">⭐已收藏</button>
+                            {% endif %}
+                            <span>{{ room.created|timesince }}以前</span>
                         </div>
-                        <div class="room__conversation">
-                            <div class="threads scroll">
-                                {% for message in room_messages %}
-                                    <div class="thread">
-                                        <div class="thread__top">
-                                            <div class="thread__author">
-                                                <a href="{% url 'user-profile' message.user.id %}"
-                                                   class="thread__authorInfo">
-                                                    <div class="avatar avatar--small">
-                                                        <img src="{{ message.user.avatar.url }}"/>
-                                                    </div>
-                                                    <span>@{{ message.user.username }}</span>
-                                                </a>
-                                                <span class="thread__date">{{ message.created|timesince }} 以前</span>
-                                                <p>
+                        <div class="room__hosted">
+                            <p>主题</p>
+                            <a href="{% url 'user-profile' room.host.id %}" class="room__author">
+                                <div class="avatar avatar--small">
+                                    <img src="{{ room.host.avatar.url }}"/>
+                                </div>
+                                <span>@{{ room.host.username }}</span>
+                            </a>
+                        </div>
+                        <span class="room__topics">{{ room.topic }}</span>
+                    </div>
+                    <div class="room__conversation">
+                        <div class="threads scroll">
+                            {% for message in room_messages %}
+                                <div class="thread">
+                                    <div class="thread__top">
+                                        <div class="thread__author">
+                                            <a href="{% url 'user-profile' message.user.id %}"
+                                               class="thread__authorInfo">
+                                                <div class="avatar avatar--small">
+                                                    <img src="{{ message.user.avatar.url }}"/>
+                                                </div>
+                                                <span>@{{ message.user.username }}</span>
+                                            </a>
+                                            <span class="thread__date">{{ message.created|timesince }} 以前</span>
+                                            <p>
                                                 <span class="like-button{% if request.user in message.likes.all %} liked{% endif %}"
                                                       data-message-id="{{ message.id }}"
                                                       onclick="toggleLike(this)">
@@ -88,146 +88,151 @@
                                                         💙
                                                     {% endif %}
                                                 </span>
-                                                </p>
-                                                {% if message.user.is_muted %}
-                                                    <div class="alert alert-warning" style="color: red">
-                                                        该用户已被禁言,请注意其言论
-                                                    </div>
-                                                {% endif %}
-                                            </div>
-                                            {% if request.user == message.user %}
-                                                <a href="{% url 'delete-message' message.id %}">
-                                                    <div class="thread__delete">
-                                                        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32"
-                                                             height="32">
-                                                            <title>remove</title>
-                                                            <path d="M27.314 6.019l-1.333-1.333-9.98 9.981-9.981-9.981-1.333 1.333 9.981 9.981-9.981 9.98 1.333 1.333 9.981-9.98 9.98 9.98 1.333-1.333-9.98-9.98 9.98-9.981z"></path>
-                                                        </svg>
-                                                    </div>
-                                                </a>
+                                            </p>
+                                            {% if message.user.is_muted %}
+                                                <div class="alert alert-warning" style="color: red">
+                                                    该用户已被禁言,请注意其言论
+                                                </div>
                                             {% endif %}
                                         </div>
-                                        <script>
-                                            function toggleLike(element) {
-                                                const messageId = element.getAttribute('data-message-id');
-
-                                                // 添加动画类
-                                                element.classList.add('like-animation');
-
-                                                // 发送 AJAX 请求
-                                                fetch(`/message/${messageId}/toggle-like/`, {
-                                                    method: 'POST',
-                                                    headers: {'X-CSRFToken': '{{ csrf_token }}'}
-                                                })
-                                                    .then(response => {
-                                                        if (response.ok) {
-                                                            // 切换类以显示点赞状态
-                                                            element.classList.toggle('liked');
-                                                            // 更新文本
-                                                            element.textContent = element.classList.contains('liked') ? '💕' : '💙';
-                                                        }
-                                                    })
-                                                    .catch(error => console.error('Error:', error));
-                                            }
-                                        </script>
-                                        <div class="thread__details">
-                                            {% if message.body %}
-                                                <p>{{ message.body }}</p>  <!-- 显示文本内容 -->
-                                            {% endif %}
-                                            {% if message.image %}
-                                                <img src="{{ message.image.url }}" alt="Message Image"
-                                                     class="message-image"
-                                                     style="max-width: 20%; height: auto;"/>  <!-- 显示图片 -->
-                                            {% endif %}
-                                        </div>
+                                        {% if request.user == message.user %}
+                                            <a href="{% url 'delete-message' message.id %}">
+                                                <div class="thread__delete">
+                                                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32"
+                                                         height="32">
+                                                        <title>remove</title>
+                                                        <path d="M27.314 6.019l-1.333-1.333-9.98 9.981-9.981-9.981-1.333 1.333 9.981 9.981-9.981 9.98 1.333 1.333 9.981-9.98 9.98 9.98 1.333-1.333-9.98-9.98 9.98-9.981z"></path>
+                                                    </svg>
+                                                </div>
+                                            </a>
+                                        {% endif %}
                                     </div>
-                                {% endfor %}
-                            </div>
+                                    <script>
+                                        function toggleLike(element) {
+                                            const messageId = element.getAttribute('data-message-id');
+
+                                            // 添加动画类
+                                            element.classList.add('like-animation');
+
+                                            // 发送 AJAX 请求
+                                            fetch(`/message/${messageId}/toggle-like/`, {
+                                                method: 'POST',
+                                                headers: {'X-CSRFToken': '{{ csrf_token }}'}
+                                            })
+                                                .then(response => {
+                                                    if (response.ok) {
+                                                        // 切换类以显示点赞状态
+                                                        element.classList.toggle('liked');
+                                                        // 更新文本
+                                                        element.textContent = element.classList.contains('liked') ? '💕' : '💙';
+                                                    }
+                                                })
+                                                .catch(error => console.error('Error:', error));
+                                        }
+                                    </script>
+                                    <div class="thread__details">
+                                        {% if message.body %}
+                                            <p>{{ message.body }}</p>  <!-- 显示文本内容 -->
+                                        {% endif %}
+                                        {% if message.image %}
+                                            <img src="{{ message.image.url }}" alt="Message Image"
+                                                 class="message-image"
+                                                 style="max-width: 20%; height: auto;"/>  <!-- 显示图片 -->
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
                         </div>
                     </div>
-                    <div class="room__message">
-                        {% if request.user.is_muted %}
-                            <div class="alert alert-warning">
-                                您已被禁言，无法发表言论。
+                </div>
+                <div class="room__message">
+                    {% if request.user.is_muted %}
+                        <div class="alert alert-warning">
+                            您已被禁言，无法发表言论。
+                        </div>
+                    {% else %}
+                        <form action="" method="POST" enctype="multipart/form-data" class="message-form"
+                              onsubmit="return validateForm()">
+                            {% csrf_token %}
+                            <div class="input-container">
+                                <input name="body" placeholder="发表言论" class="message-input" id="messageBody"/>
+                                <input type="file" name="image" accept="image/*" class="image-input" id="imageInput"
+                                       style="display: none;"/>
+                                <button type="button" class="btn btn--upload" id="uploadButton"
+                                        style="background-color: #131a3f;">+
+                                </button>
+                                <img id="imagePreview" class="image-preview" alt="Image Preview"
+                                     style="display: none; width: 50px; height: 50px; margin-left: 10px;"/>
+                                <button type="submit" class="btn btn--send">发送</button>
                             </div>
-                        {% else %}
-                          <form action="" method="POST" enctype="multipart/form-data" class="message-form" onsubmit="return validateForm()">
-    {% csrf_token %}
-    <div class="input-container">
-        <input name="body" placeholder="发表言论" class="message-input" id="messageBody"/>
-        <input type="file" name="image" accept="image/*" class="image-input" id="imageInput" style="display: none;"/>
-        <button type="button" class="btn btn--upload" id="uploadButton" style="background-color: #131a3f;">+</button>
-        <img id="imagePreview" class="image-preview" alt="Image Preview" style="display: none; width: 50px; height: 50px; margin-left: 10px;"/>
-        <button type="submit" class="btn btn--send">发送</button>
-    </div>
-</form>
+                        </form>
 
-<!-- Bootstrap Toast -->
-<div id="toast" class="toast" style="display: none;">
-    <div class="toast-body">
-        请填写内容或上传文件！
-    </div>
-</div>
+                        <!-- Bootstrap Toast -->
+                        <div id="toast" class="toast" style="display: none;">
+                            <div class="toast-body">
+                                请填写内容或上传文件！
+                            </div>
+                        </div>
 
-<script>
-    document.getElementById('uploadButton').addEventListener('click', function() {
-        document.getElementById('imageInput').click();
-    });
+                        <script>
+                            document.getElementById('uploadButton').addEventListener('click', function () {
+                                document.getElementById('imageInput').click();
+                            });
 
-    document.getElementById('imageInput').addEventListener('change', function() {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('imagePreview').src = e.target.result;
-                document.getElementById('imagePreview').style.display = 'block';
-            }
-            reader.readAsDataURL(file);
-        } else {
-            document.getElementById('imagePreview').style.display = 'none';
-        }
-    });
+                            document.getElementById('imageInput').addEventListener('change', function () {
+                                const file = this.files[0];
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = function (e) {
+                                        document.getElementById('imagePreview').src = e.target.result;
+                                        document.getElementById('imagePreview').style.display = 'block';
+                                    }
+                                    reader.readAsDataURL(file);
+                                } else {
+                                    document.getElementById('imagePreview').style.display = 'none';
+                                }
+                            });
 
-    function validateForm() {
-        const messageBody = document.getElementById('messageBody').value.trim();
-        const imageInput = document.getElementById('imageInput').files.length;
+                            function validateForm() {
+                                const messageBody = document.getElementById('messageBody').value.trim();
+                                const imageInput = document.getElementById('imageInput').files.length;
 
-        if (!messageBody && imageInput === 0) {
-            showToast(); // 显示 UI 提示
-            return false; // 阻止表单提交
-        }
-        return true; // 允许表单提交
-    }
+                                if (!messageBody && imageInput === 0) {
+                                    showToast(); // 显示 UI 提示
+                                    return false; // 阻止表单提交
+                                }
+                                return true; // 允许表单提交
+                            }
 
-    function showToast() {
-        const toast = document.getElementById('toast');
-        toast.style.display = 'block'; // 显示提示
+                            function showToast() {
+                                const toast = document.getElementById('toast');
+                                toast.style.display = 'block'; // 显示提示
 
-        // 自动隐藏提示
-        setTimeout(() => {
-            toast.style.display = 'none';
-        }, 3000);
-    }
-</script>
+                                // 自动隐藏提示
+                                setTimeout(() => {
+                                    toast.style.display = 'none';
+                                }, 3000);
+                            }
+                        </script>
 
-<style>
-    .toast {
-        position: fixed;
-        top: 50%; /* 垂直居中 */
-        left: 50%; /* 水平居中 */
-        transform: translate(-50%, -50%); /* 使其中心对齐 */
-        z-index: 1050;
-        background-color: rgba(255, 255, 255, 0.9);
-        border: 1px solid #ccc;
-        padding: 10px;
-        border-radius: 5px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        text-align: center; /* 文字居中 */
-    }
-</style>
-                        {% endif %}
-                    </div>
-            
+                        <style>
+                            .toast {
+                                position: fixed;
+                                top: 50%; /* 垂直居中 */
+                                left: 50%; /* 水平居中 */
+                                transform: translate(-50%, -50%); /* 使其中心对齐 */
+                                z-index: 1050;
+                                background-color: rgba(255, 255, 255, 0.9);
+                                border: 1px solid #ccc;
+                                padding: 10px;
+                                border-radius: 5px;
+                                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                                text-align: center; /* 文字居中 */
+                            }
+                        </style>
+                    {% endif %}
+                </div>
+
                 <script>
                     // 获取文件输入和上传按钮元素
                     const imageInput = document.getElementById('imageInput');

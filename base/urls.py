@@ -32,5 +32,10 @@ urlpatterns = [
     path('notifications/read/<int:notification_id>/', views.mark_notification_as_read,
          name='mark-notification-as-read'),
     path('notifications/', views.notifications_view, name='notifications'),
+    path('announcements/', views.announcement_list, name='announcement_list'),
+    path('announcements/edit/<int:announcement_id>/', views.edit_announcement, name='edit_announcement'),
+    path('announcements/new/', views.edit_announcement, name='new_announcement'),  # 创建新公告
+    path('announcement/delete/<int:announcement_id>/', views.delete_announcement, name='delete_announcement'),
 
+    path('add-friend/<int:user_id>/', views.add_friend, name='add_friend'),
 ]
