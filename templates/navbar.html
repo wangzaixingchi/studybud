@@ -2,30 +2,43 @@
 <header class="header header--loggedIn">
     <div class="container">
         <a href="{% url 'home' %}" class="header__logo">
-            <img src="{% static 'images/logo.svg' %}"/>
+            <img src="{% static 'images/logo.svg' %}" alt="Logo"/>
             <h1>聊天室</h1>
         </a>
-        <form class="header__search" method="GET" id="searchQuery" action="{% url 'home' %}">
+
+        <form class="header__search" method="GET" action="{% url 'home' %}">
             <label>
-                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-                    <title>search</title>
-                    <path d="M32 30.586l-10.845-10.845c1.771-2.092 2.845-4.791 2.845-7.741 0-6.617-5.383-12-12-12s-12 5.383-12 12c0 6.617 5.383 12 12 12 2.949 0 5.649-1.074 7.741-2.845l10.845 10.845 1.414-1.414zM12 22c-5.514 0-10-4.486-10-10s4.486-10 10-10c5.514 0 10 4.486 10 10s-4.486 10-10 10z"></path>
-                </svg>
-                <input name="q" placeholder="搜索房间" onclick="submitSearch()"/>
+                <input name="q" placeholder="搜索房间"/>
+                <button type="submit" style="  opacity: 0.5; background-color: #51546E;   border: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                        <path d="M32 30.586l-10.845-10.845c1.771-2.092 2.845-4.791 2.845-7.741 0-6.617-5.383-12-12-12s-12 5.383-12 12c0 6.617 5.383 12 12 12 2.949 0 5.649-1.074 7.741-2.845l10.845 10.845 1.414-1.414zM12 22c-5.514 0-10-4.486-10-10s4.486-10 10-10c5.514 0 10 4.486 10 10s-4.486 10-10 10z"></path>
+                    </svg>
+                </button>
             </label>
         </form>
+
+        <form class="header__search" method="GET" action="{% url 'search-user' %}">
+            <label>
+                <input name="user" id="userSearch" placeholder="搜索用户" />
+                <button type="submit" id="searchUserButton" style="  opacity: 0.5; background-color: #51546E;   border: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+                        <path d="M32 30.586l-10.845-10.845c1.771-2.092 2.845-4.791 2.845-7.741 0-6.617-5.383-12-12-12s-12 5.383-12 12c0 6.617 5.383 12 12 12 2.949 0 5.649-1.074 7.741-2.845l10.845 10.845 1.414-1.414zM12 22c-5.514 0-10-4.486-10-10s4.486-10 10-10c5.514 0 10 4.486 10 10s-4.486 10-10 10z"></path>
+                    </svg>
+                </button>
+            </label>
+        </form>
+
         <nav class="header__menu">
             {% if request.user.is_authenticated %}
             <div class="header__user">
                 <a href="{% url 'user-profile' request.user.id %}">
                     <div class="avatar avatar--medium active">
-                        <img src="{{ request.user.avatar.url }}"/>
+                        <img src="{{ request.user.avatar.url }}" alt="{{ request.user.username }} 的头像"/>
                     </div>
                     <p>{{ request.user.username }}<span>@{{ request.user.username }}</span></p>
                 </a>
                 <button class="dropdown-button" onclick="toggleDropdown()">
-                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-                        <title>chevron-down</title>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
                         <path d="M16 21l-13-13h-3l16 16 16-16h-3l-13 13z"></path>
                     </svg>
                 </button>
@@ -43,7 +56,7 @@
             {% else %}
             <div>
                 <a href="{% url 'login' %}">
-                    <img src="{% static 'images/avatar.svg' %}"/>
+                    <img src="{% static 'images/avatar.svg' %}" alt="用户登录"/>
                 </a>
                 <a href="{% url 'login' %}"><span>登录</span></a>
             </div>
@@ -67,46 +80,44 @@
     </div>
 </header>
 
-<!-- 引入 jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
         var announcements = $('.announcements-content');
-        var singleAnnouncementWidth = $('.announcement').outerWidth(true); // 获取单个公告项的宽度
+        var singleAnnouncementWidth = $('.announcement').outerWidth(true);
 
-        // 设置内容的总宽度为公告项的宽度 * 公告项数量
+        // 设置内容的总宽度
         announcements.css('width', singleAnnouncementWidth * $('.announcement').length);
 
         // 开始滚动
         function startScrolling() {
             announcements.animate({
-                'margin-left': -singleAnnouncementWidth + 'px' // 向左滚动一个公告的宽度
+                'margin-left': -singleAnnouncementWidth + 'px'
             }, 45000, function () {
-                // 重置到第一个公告
-                announcements.css('margin-left', 0); // 将 margin-left 重置为0
+                announcements.css('margin-left', 0);
             });
         }
 
-        setInterval(startScrolling, 3000); // 每3秒滚动一次
+        setInterval(startScrolling, 3000);
 
         // 切换下拉菜单
         window.toggleDropdown = function () {
-            $('#dropdownMenu').toggle(); // 切换显示状态
-        }
+            $('#dropdownMenu').toggle();
+        };
     });
 </script>
 
 <style>
     #announcements {
-        overflow: hidden; /* 隐藏溢出部分 */
-        white-space: nowrap; /* 保持内容在同一行 */
+        overflow: hidden;
+        white-space: nowrap;
     }
     .announcements-content {
-        display: inline-block; /* 使内容能够水平排列 */
-        white-space: nowrap; /* 保持内容在同一行 */
+        display: inline-block;
+        white-space: nowrap;
     }
     .announcement {
-        display: inline-block; /* 使每个公告水平排列 */
-        margin-right: 20px; /* 增加公告之间的间距 */
+        display: inline-block;
+        margin-right: 20px;
     }
 </style>

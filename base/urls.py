@@ -3,6 +3,8 @@ from . import views
 
 from django.contrib import admin
 
+from .views import UserSearchView
+
 urlpatterns = [
     path('login/', views.loginPage, name="login"),
     path('logout/', views.logoutUser, name="logout"),
@@ -40,6 +42,7 @@ urlpatterns = [
     path('add-friend/<int:user_id>/', views.add_friend, name='add_friend'),
 path('room/<int:room_id>/send/', views.send_message, name='send_message'),  # 定义 send_message
     path('dm/create/<int:user_id>/', views.create_dm_room, name='create_dm_room'),
+    path('search-user/', UserSearchView.as_view(), name='search-user'),  # 新增搜索用户的路由
     path('dm/room/<int:room_id>/', views.dm_room, name='dm_room'),
     path('room/<int:room_id>/messages/', views.get_messages, name='get_messages'),  # 获取消息视图
 ]

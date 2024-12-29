@@ -1,0 +1,37 @@
+{% extends 'main.html' %}
+{% block content %}
+    <main class="layout layout--3">
+        <div class="container">
+            <!-- Topics Start -->
+            {% include 'base/topics_component.html' %}
+     <!-- Room List Start -->
+        <div class="roomList">
+          
+            <!-- Topics End -->
+            <h1 style="text-align: center;">搜索结果</h1>
+            {% if users %}
+                <ul class="user-list">
+                    {% for user in users %}
+                        <li class="user-item">
+                            <a href="{% url 'user-profile' user.id %}" class="user-link">
+                                <div class="avatar avatar--small">
+                                    <img src="{{ user.avatar.url }}" alt="{{ user.username }} 的头像"/>
+                                </div>
+                                <span>{{ user.username }}</span>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p style="text-align: center;">没有找到匹配的用户。</p>
+            {% endif %}
+            <a href="{% url 'home' %}" style="display: block; text-align: center; margin-top: 20px;">返回主页</a>
+              </div>
+            <!-- Activities Start -->
+            {% include 'base/activity_component.html' %}
+
+            <!-- Activities End -->
+        </div>
+    </main>
+{% endblock content %}
+

@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 from django.utils import timezone
+from django.views import View
 from django.views.decorators.http import require_POST
 
 from .models import Room, Topic, Message, User, Announcement, DirectMessageRoom
@@ -625,10 +626,6 @@ def get_messages(request, room_id):
     return JsonResponse({'messages': message_list})
 
 
-from django.http import JsonResponse
-from .models import Message
-
-
 def fetch_messages(request, room_id):
     messages = Message.objects.filter(room_id=room_id).order_by('-created_at')[:10]  # 获取最新的10条消息
     data = {
@@ -646,3 +643,15 @@ def fetch_messages(request, room_id):
         ]
     }
     return JsonResponse(data)
+
+
+class UserSearchView(View):
+    def get(self, request):
+        username = request.GET.get('user', '')
+        if username:
+            users = User.objects.filter(username__icontains=username)  # 使用模糊查询
+            if users.exists():
+                return render(request, 'base/user_search_results.html', {'users': users})  # 显示结果
+            else:
+                return render(request, 'base/user_not_found.html')  # 用户未找到
+        return redirect('home')  # 如果没有提供用户名，重定向回主页
