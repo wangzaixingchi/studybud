@@ -35,8 +35,8 @@
                 <a href="{% url 'update-user' %}" class="dropdown-link">个人编辑</a>
                 <a href="{% url 'notifications' %}" class="notification-button">通知</a>
                 <a href="{% url 'game' %}" class="dropdown-link">娱乐</a>
-                {% if request.user.is_staff %}  <!-- 检查用户是否为管理员 -->
-                <a href="{% url 'admin:index' %}" class="dropdown-link">管理员</a>  <!-- 管理员链接 -->
+                {% if request.user.is_staff %}
+                <a href="{% url 'admin:index' %}" class="dropdown-link">管理员</a>
                 {% endif %}
                 <a href="{% url 'logout' %}" class="dropdown-link">退出登录</a>
             </div>
@@ -50,44 +50,44 @@
             {% endif %}
         </nav>
     </div>
+
     <div id="announcements">
         <div class="announcements-content">
             {% for announcement in announcements %}
             <div class="announcement">
-                <p><span style="font-size: x-large;color: yellow">{{ announcement.title }}</span> -
-                    {{ announcement.content }}
-                    -
-                    <span style="font-size: larger;color: red">发布者：{{ announcement.author }}</span> -
-                    <span style="font-size: larger;color:skyblue ">发布时间：{{ announcement.created_at }}</span></p>
+                <p>
+                    <span style="font-size: large; color: yellow">{{ announcement.title }}</span> -
+                    {{ announcement.content }} -
+                    <span style="font-size: larger; color: red">发布者：{{ announcement.author }}</span> -
+                    <span style="font-size: larger; color: skyblue">发布时间：{{ announcement.created_at }}</span>
+                </p>
             </div>
             {% endfor %}
         </div>
     </div>
 </header>
 
+<!-- 引入 jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
         var announcements = $('.announcements-content');
         var singleAnnouncementWidth = $('.announcement').outerWidth(true); // 获取单个公告项的宽度
 
-        // 克隆公告以实现循环效果
-        announcements.append(announcements.html());
-
-        // 设置内容的总宽度为三个公告的宽度
-        announcements.css('width', singleAnnouncementWidth * 3);
+        // 设置内容的总宽度为公告项的宽度 * 公告项数量
+        announcements.css('width', singleAnnouncementWidth * $('.announcement').length);
 
         // 开始滚动
         function startScrolling() {
             announcements.animate({
                 'margin-left': -singleAnnouncementWidth + 'px' // 向左滚动一个公告的宽度
             }, 45000, function () {
-                // 重置位置
+                // 重置到第一个公告
                 announcements.css('margin-left', 0); // 将 margin-left 重置为0
             });
         }
 
-        setInterval(startScrolling, 3000); // 每6秒滚动一次
+        setInterval(startScrolling, 3000); // 每3秒滚动一次
 
         // 切换下拉菜单
         window.toggleDropdown = function () {
@@ -95,3 +95,18 @@
         }
     });
 </script>
+
+<style>
+    #announcements {
+        overflow: hidden; /* 隐藏溢出部分 */
+        white-space: nowrap; /* 保持内容在同一行 */
+    }
+    .announcements-content {
+        display: inline-block; /* 使内容能够水平排列 */
+        white-space: nowrap; /* 保持内容在同一行 */
+    }
+    .announcement {
+        display: inline-block; /* 使每个公告水平排列 */
+        margin-right: 20px; /* 增加公告之间的间距 */
+    }
+</style>

@@ -8,8 +8,9 @@ from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
-from .models import Room, Topic, Message, User, Announcement
+from .models import Room, Topic, Message, User, Announcement, DirectMessageRoom
 from .forms import RoomForm, UserForm, MyUserCreationForm
 from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
@@ -19,6 +20,8 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Announcement
 from .forms import AnnouncementForm
+from .models import DirectMessage, DirectMessageRoom
+
 
 # 获取房间信息
 def get_room_info(room):
@@ -26,10 +29,12 @@ def get_room_info(room):
     participants = room.participants.all()
     return room_messages, participants
 
+
 # 校验密码
 def check_password(room, entered_password):
     hashed_password = hashlib.md5((entered_password + 'wangzaixiaoqi').encode()).hexdigest()
     return hashed_password == room.encryption_key
+
 
 # 登录
 def loginPage(request):
@@ -53,10 +58,12 @@ def loginPage(request):
     context = {'page': page}
     return render(request, 'base/login_register.html', context)
 
+
 # 退出登录
 def logoutUser(request):
     logout(request)
     return redirect('home')
+
 
 # 注册页面
 def registerPage(request):
@@ -73,6 +80,7 @@ def registerPage(request):
             messages.error(request, '用户已存在或二次密码不匹配!')
 
     return render(request, 'base/login_register.html', {'form': form})
+
 
 # 主页
 def home(request):
@@ -91,6 +99,7 @@ def home(request):
     context = {'rooms': rooms, 'topics': topics,
                'room_count': room_count, 'room_messages': room_messages, 'announcements': announcements}
     return render(request, 'base/home.html', context)
+
 
 # 房间页面
 def room(request, pk):
@@ -142,6 +151,8 @@ def room(request, pk):
         'participants': participants,
     }
     return render(request, 'base/room.html', context)
+
+
 # 发送信息
 def handle_message_post(request, room):
     """处理消息发送的逻辑"""
@@ -166,23 +177,22 @@ def handle_message_post(request, room):
 from django.db import transaction
 
 # 房间收藏
+from django.http import JsonResponse
+
+
+# 收藏异步
 def toggle_favorite(request, room_id):
-    room = get_object_or_404(Room, id=room_id)
-    if request.user.is_authenticated:
-        with transaction.atomic():
-            if request.user in room.favorites.all():
-                room.favorites.remove(request.user)
-            else:
-                room.favorites.add(request.user)
-            if room in request.user.favorites_rooms.all():  # 使用 favorites_rooms
-                request.user.favorites_rooms.remove(room)
-            else:
-                request.user.favorites_rooms.add(room)
-    referer = request.META.get('HTTP_REFERER')
-    if referer:
-        return redirect(referer)
-    else:
-        return redirect(reverse('home'))  # 使用 reverse 确保 URL 存在
+    if request.method == 'POST' and request.user.is_authenticated:
+        room = get_object_or_404(Room, id=room_id)
+        if request.user in room.favorites.all():
+            room.favorites.remove(request.user)
+            favorited = False
+        else:
+            room.favorites.add(request.user)
+            favorited = True
+
+        return JsonResponse({'favorited': favorited})
+
 
 # 评论点赞
 def toggle_like(request, message_id):
@@ -196,11 +206,13 @@ def toggle_like(request, message_id):
         return JsonResponse({'liked': request.user in message.likes.all()})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+
 # 我的收藏
 def my_favorites(request):
     # 获取当前用户的收藏房间
     favorites = request.user.favorites.all()  # 获取当前用户收藏的所有房间
     return render(request, 'base/feed_component_favorite.html', {'favorites': favorites})
+
 
 # 创建房间
 @login_required(login_url='/login')
@@ -233,6 +245,7 @@ def createRoom(request):
     context = {'form': form, "topics": topics}
     return render(request, 'base/room_form.html', context)
 
+
 # 用户资料
 def userProfile(request, pk):
     user = User.objects.get(id=pk)
@@ -247,6 +260,7 @@ def userProfile(request, pk):
         'topics': topics,
         'favorites': favorites}
     return render(request, 'base/profile.html', context)
+
 
 # 更新房间
 @login_required(login_url='/login')
@@ -282,6 +296,7 @@ def updateRoom(request, pk):
     context = {'form': form, 'topics': topics, 'room': room}
     return render(request, 'base/room_form.html', context)
 
+
 # 删除房间
 @login_required(login_url='/login')
 def deleteRoom(request, pk):
@@ -292,6 +307,7 @@ def deleteRoom(request, pk):
         room.delete()
         return redirect('home')
     return render(request, 'base/delete.html', {'obj': room})
+
 
 # 删除信息
 @login_required(login_url='/login')
@@ -466,6 +482,7 @@ def mark_notification_as_read(request, notification_id):
     notification.save()
     return redirect('notifications')  # 假设您有一个显示通知的页面
 
+
 # 通知列表
 @login_required  # 确保用户已登录
 def notifications_view(request):
@@ -479,6 +496,7 @@ def notifications_view(request):
 def announcement_list(request):
     announcements = Announcement.objects.all()
     return render(request, 'base/announcement_list.html', {'announcements': announcements})
+
 
 # 编辑公告
 def edit_announcement(request, announcement_id=None):
@@ -499,18 +517,14 @@ def edit_announcement(request, announcement_id=None):
 
     return render(request, 'base/edit_announcement.html', {'form': form, 'announcement': announcement})
 
+
 # 删除公告
-@login_required
+@require_POST
 def delete_announcement(request, announcement_id):
     announcement = get_object_or_404(Announcement, id=announcement_id)
+    announcement.delete()
+    return redirect('announcement_list')  # 重定向到公告列表页面
 
-    if request.method == 'POST':
-        announcement.delete()
-        messages.success(request, '公告已成功删除。')
-        return redirect('announcement_list')
-
-    # 不需要返回确认页面
-    return redirect('announcement_list')  # 默认情况下重定向到公告列表
 
 # 添加好友
 @login_required
@@ -524,3 +538,111 @@ def add_friend(request, user_id):
         messages.success(request, f"已成功添加 {friend.username} 为好友。")
 
     return redirect(request.META.get('HTTP_REFERER', 'home'))  # 返回到上一页或主页
+
+
+# 私聊
+@login_required
+def create_dm_room(request, user_id):
+    other_user = get_object_or_404(User, id=user_id)
+
+    # 确保房间创建是双向的
+    room, created = DirectMessageRoom.objects.get_or_create(
+        user1=request.user,
+        user2=other_user,
+    )
+
+    if not created:  # 如果房间已经存在，尝试获取另一种组合
+        room, created = DirectMessageRoom.objects.get_or_create(
+            user1=other_user,
+            user2=request.user,
+        )
+
+    return redirect('dm_room', room_id=room.id)
+
+
+# 私聊
+@login_required
+def dm_room(request, room_id):
+    room = get_object_or_404(DirectMessageRoom, id=room_id)
+    messages = room.messages.all()
+    # 获取 user1 和 user2
+    user1 = room.user1
+    user2 = room.user2
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        image = request.FILES.get('image')  # 获取上传的图片
+        if content or image:  # 只在内容或图片不为空时创建消息
+            DirectMessage.objects.create(room=room, sender=request.user, content=content, image=image)
+
+            return redirect('dm_room', room_id=room.id)
+
+    return render(request, 'base/dm_room.html', {'room': room, 'messages': messages})
+
+
+@login_required
+def send_message(request, room_id):
+    room = get_object_or_404(DirectMessageRoom, id=room_id)
+    # 获取 user1 和 user2
+    user1 = room.user1
+    user2 = room.user2
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        image = request.FILES.get('image')  # 获取上传的图片
+
+        # 查找当前用户和目标用户之间的房间
+        room2 = DirectMessageRoom.objects.filter(
+            (Q(user1=user2) & Q(user2=user1))
+        ).first()
+        if content or image:  # 只在内容或图片不为空时创建消息
+            DirectMessage.objects.create(room=room2, sender=room2.user1, content=content, image=image)
+        message = DirectMessage.objects.create(room=room, sender=request.user, content=content, image=image)
+
+        # 返回 JSON 响应
+        return JsonResponse({
+            'sender': message.sender.username,
+            'sender_avatar': message.sender.avatar.url if message.sender.avatar else None,  # 发送者头像
+            'content': message.content,
+            'created_at': message.created_at.strftime('%Y-%m-%d %H:%M'),
+            'image': message.image.url if message.image else None,
+        })
+
+
+@login_required
+def get_messages(request, room_id):
+    room = get_object_or_404(DirectMessageRoom, id=room_id)
+    messages = room.directmessage_set.all().select_related('sender')  # 获取房间的所有消息
+    message_list = []
+
+    for message in messages:
+        message_list.append({
+            'sender': message.sender.username,
+            'content': message.content,
+            'created_at': message.created_at.strftime('%Y-%m-%d %H:%M'),
+            'image': message.image.url if message.image else None,
+            'is_mine': message.sender == request.user,  # 标识消息是否是当前用户发送
+        })
+
+    return JsonResponse({'messages': message_list})
+
+
+from django.http import JsonResponse
+from .models import Message
+
+
+def fetch_messages(request, room_id):
+    messages = Message.objects.filter(room_id=room_id).order_by('-created_at')[:10]  # 获取最新的10条消息
+    data = {
+        'messages': [
+            {
+                'content': message.content,
+                'created_at': message.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'image': message.image.url if message.image else None,
+                'sender': {
+                    'username': message.sender.username,
+                    'avatar': message.sender.avatar.url,
+                }
+            }
+            for message in messages
+        ]
+    }
+    return JsonResponse(data)

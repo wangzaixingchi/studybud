@@ -22,7 +22,7 @@
                             <a href="{% url 'update-user' %}" class="btn btn--main btn--pill">编辑资料</a>
                         {% endif %}
                     </div>
-
+                    <a href="{% url 'create_dm_room' user.id %}">私聊</a>
                     {% if user.is_muted %}
                         <div class="alert alert-warning">
                             此用户已被禁言<br>
@@ -63,11 +63,11 @@
                            onclick="loadContent('rooms')">
                             房间
                         </a>
-                         {% if request.user == user %}
-                        <a id="my-favorites" href="#" style="flex: 1; text-align: center;"
-                           onclick="loadContent('favorites')">
-                            我的收藏
-                        </a>
+                        {% if request.user == user %}
+                            <a id="my-favorites" href="#" style="flex: 1; text-align: center;"
+                               onclick="loadContent('favorites')">
+                                我的收藏
+                            </a>
                         {% endif %}
                     </div>
                 </div>

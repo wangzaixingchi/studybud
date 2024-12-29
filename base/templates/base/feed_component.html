@@ -1,4 +1,8 @@
 <div class="container">
+    <head>
+        <meta name="csrf-token" content="{{ csrf_token }}">
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    </head>
     <div id="roomList" class="roomList">
         {% for room in rooms %}
             <div class="roomListRoom">
@@ -12,25 +16,18 @@
                     <div class="roomListRoom__actions">
                         <span>{{ room.created|timesince }} 以前</span>
                     </div>
-                    <form action="{% url 'toggle_favorite' room.id %}" method="post">
-                        {% csrf_token %}
+                    <button id="favorite-button-{{ room.id }}" 
+                            class="{% if user in room.favorites.all %}button-favorited{% else %}button-not-favorited{% endif %}" 
+                            onclick="toggleFavorite({{ room.id }})">
                         {% if user in room.favorites.all %}
-                            已收藏
+                            ⭐
                         {% else %}
-                            可收藏
+                            ❌
                         {% endif %}
-                        <button type="submit"
-                                class="{% if user in room.favorites.all %}button-favorited{% else %}button-not-favorited{% endif %}">
-                            {% if user in room.favorites.all %}
-                                ⭐
-                            {% else %}
-                                ❌
-                            {% endif %}
-                        </button>
-                    </form>
+                    </button>
                 </div>
                 <div class="roomListRoom__content">
-                    <a href="{% url 'room'  pk=room.id %}">{{ room.name }}</a>
+                    <a href="{% url 'room' room.id %}">{{ room.name }}</a>
                 </div>
                 <div class="roomListRoom__meta">
                     <a href="{% url 'room' room.id %}" class="roomListRoom__joined">
@@ -59,7 +56,7 @@
             text-align: center;
             padding: 20px;
             font-size: 1.5em;
-            color: #888; /* 字体颜色 */
+            color: #888;
             font-weight: bold;
         }
         .no-rooms p {
@@ -101,6 +98,30 @@
 
         function changePage(direction) {
             showPage(currentPage + direction);
+        }
+
+        function toggleFavorite(roomId) {
+            const url = "{% url 'toggle_favorite' 0 %}".replace('0', roomId);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            axios.post(url, {}, {
+                headers: {
+                    'X-CSRFToken': csrfToken // 发送 CSRF 令牌
+                }
+            })
+            .then(response => {
+                const button = document.getElementById(`favorite-button-${roomId}`);
+                if (response.data.favorited) {
+                    button.className = 'button-favorited';
+                    button.innerHTML = '⭐';
+                } else {
+                    button.className = 'button-not-favorited';
+                    button.innerHTML = '❌';
+                }
+            })
+            .catch(error => {
+                console.error('Error toggling favorite:', error);
+            });
         }
 
         // 初始化显示第一页

@@ -38,4 +38,8 @@ urlpatterns = [
     path('announcement/delete/<int:announcement_id>/', views.delete_announcement, name='delete_announcement'),
 
     path('add-friend/<int:user_id>/', views.add_friend, name='add_friend'),
+path('room/<int:room_id>/send/', views.send_message, name='send_message'),  # 定义 send_message
+    path('dm/create/<int:user_id>/', views.create_dm_room, name='create_dm_room'),
+    path('dm/room/<int:room_id>/', views.dm_room, name='dm_room'),
+    path('room/<int:room_id>/messages/', views.get_messages, name='get_messages'),  # 获取消息视图
 ]

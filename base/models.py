@@ -39,6 +39,7 @@ class Topic(models.Model):
     def __str__(self):
         return self.name
 
+
 # 房间
 class Room(models.Model):
     host = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name='房间主持人')  # 房间主持人
@@ -53,6 +54,7 @@ class Room(models.Model):
     encryption_key = models.CharField(max_length=255, blank=True, null=True, verbose_name='加密密钥')  # 加密密钥
     is_encrypted = models.BooleanField(default=False, verbose_name='是否加密')  # 标记房间是否加密
     is_hidden = models.BooleanField(default=False, verbose_name='是否隐藏')  # 新增字段，默认为 False
+
     class Meta:
         ordering = ['-updated', 'created']  # 按更新时间和创建时间排序
         verbose_name = '房间'
@@ -133,3 +135,21 @@ class UserProfile(models.Model):
         return self.user.username
 
 
+class DirectMessageRoom(models.Model):
+    user1 = models.ForeignKey(User, related_name='dm_room_user1', on_delete=models.CASCADE)
+    user2 = models.ForeignKey(User, related_name='dm_room_user2', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user1.username} & {self.user2.username}"
+
+
+class DirectMessage(models.Model):
+    room = models.ForeignKey(DirectMessageRoom, related_name='messages', on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField(blank=True)  # 允许为空
+    image = models.ImageField(upload_to='direct_messages/', blank=True, null=True)  # 新增图片字段
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.sender.username}: {self.content}"
