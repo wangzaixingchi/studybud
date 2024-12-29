@@ -103,6 +103,7 @@ def home(request):
 
 
 # 房间页面
+@login_required(login_url='/login/')
 def room(request, pk):
     room = get_object_or_404(Room, id=pk)
 
@@ -248,6 +249,7 @@ def createRoom(request):
 
 
 # 用户资料
+@login_required(login_url='/login/')
 def userProfile(request, pk):
     user = User.objects.get(id=pk)
     rooms = user.room_set.all()
@@ -404,7 +406,7 @@ def room_list_view(request):
     return render(request, 'base/home.html', {'page_obj': page_obj})
 
 
-@login_required
+@login_required(login_url='/login')
 def mute_user(request, user_id):
     user = get_object_or_404(User, id=user_id)
     if request.method == 'POST':
@@ -425,7 +427,7 @@ from django.contrib import messages
 from .models import Notification
 
 
-@login_required
+@login_required(login_url='/login')
 def mute_user(request, user_id):
     user = get_object_or_404(User, id=user_id)
     if request.method == 'POST':
@@ -460,7 +462,7 @@ def mute_user(request, user_id):
     return render(request, 'base/mute_user.html', {'user': user})
 
 
-@login_required
+@login_required(login_url='/login')
 def unmute_user(request, user_id):
     user = get_object_or_404(User, id=user_id)  # 获取用户对象
 
@@ -476,7 +478,7 @@ def unmute_user(request, user_id):
     return redirect('user-profile', pk=str(user.id))  # 重定向到用户资料页面
 
 
-@login_required
+@login_required(login_url='/login')
 def mark_notification_as_read(request, notification_id):
     notification = get_object_or_404(Notification, id=notification_id, user=request.user)
     notification.is_read = True
@@ -485,7 +487,7 @@ def mark_notification_as_read(request, notification_id):
 
 
 # 通知列表
-@login_required  # 确保用户已登录
+@login_required(login_url='/login')  # 确保用户已登录
 def notifications_view(request):
     # 获取当前用户的通知
     notifications = request.user.notification_set.all()
@@ -526,9 +528,8 @@ def delete_announcement(request, announcement_id):
     announcement.delete()
     return redirect('announcement_list')  # 重定向到公告列表页面
 
-
 # 添加好友
-@login_required
+@login_required(login_url='/login')
 def add_friend(request, user_id):
     friend = get_object_or_404(User, id=user_id)
 
@@ -542,7 +543,7 @@ def add_friend(request, user_id):
 
 
 # 私聊
-@login_required
+@login_required(login_url='/login')
 def create_dm_room(request, user_id):
     other_user = get_object_or_404(User, id=user_id)
 
@@ -562,7 +563,7 @@ def create_dm_room(request, user_id):
 
 
 # 私聊
-@login_required
+@login_required(login_url='/login')
 def dm_room(request, room_id):
     room = get_object_or_404(DirectMessageRoom, id=room_id)
     messages = room.messages.all()
@@ -580,7 +581,7 @@ def dm_room(request, room_id):
     return render(request, 'base/dm_room.html', {'room': room, 'messages': messages})
 
 
-@login_required
+@login_required(login_url='/login')
 def send_message(request, room_id):
     room = get_object_or_404(DirectMessageRoom, id=room_id)
     # 获取 user1 和 user2
@@ -608,7 +609,7 @@ def send_message(request, room_id):
         })
 
 
-@login_required
+@login_required(login_url='/login')
 def get_messages(request, room_id):
     room = get_object_or_404(DirectMessageRoom, id=room_id)
     messages = room.directmessage_set.all().select_related('sender')  # 获取房间的所有消息
@@ -643,7 +644,6 @@ def fetch_messages(request, room_id):
         ]
     }
     return JsonResponse(data)
-
 
 class UserSearchView(View):
     def get(self, request):

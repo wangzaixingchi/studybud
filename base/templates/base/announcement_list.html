@@ -20,13 +20,12 @@
                         <td>
                             <a href="{% url 'edit_announcement' announcement.id %}" class="btn btn-warning btn-sm"
                                style="background: #1b6d85">编辑</a>
-                            <button class="btn btn-danger btn-sm"
-                                    data-toggle="modal"
-                                    data-target="#deleteModal"
-                                    data-announcement-id="{{ announcement.id }}"
-                                    data-announcement-title="{{ announcement.title }}" style="background-color: #c46d6d">
-                                删除
-                            </button>
+                            <form action="{% url 'delete_announcement' announcement.id %}" method="post" style="display:inline;" onsubmit="return confirmDelete();">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm" style="background-color: #c46d6d">
+                                    删除
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 {% endfor %}
@@ -39,42 +38,9 @@
         {% endif %}
     </div>
 
-    <!-- 模态框 -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog" role="document" style="color: #2e6da4">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">确认删除公告</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    您确定要删除公告 "<span id="announcement-title"></span>" 吗？
-                </div>
-                <div class="modal-footer">
-                    <form id="delete-form" method="post">
-                        {% csrf_token %}
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal" style="background-color: #2aabd2">取消</button>
-                        <button type="submit" class="btn btn-danger" style="background-color: #c46d6d">删除</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-{% endblock %}
-
-{% block extra_js %}
     <script>
-        $('#deleteModal').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget); // 触发模态框的按钮
-            var announcementId = button.data('announcement-id'); // 获取公告 ID
-            var announcementTitle = button.data('announcement-title'); // 获取公告标题
-            var modal = $(this);
-            modal.find('#announcement-title').text(announcementTitle);
-            modal.find('#delete-form').attr('action', '/announcement/delete/' + announcementId + '/'); // 设置删除链接
-        });
+        function confirmDelete() {
+            return confirm("您确定要删除此公告吗？");
+        }
     </script>
 {% endblock %}
