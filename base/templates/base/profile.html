@@ -41,8 +41,8 @@
                                 <button type="submit" class="btn btn--main btn--pill">取消禁言</button>
                             </form>
                         {% endif %}
-                    {% elif not user.is_superuser %}
-                        {% if request.user.is_superuser %}
+                    {% elif user.is_superuser %}
+                        {% if  not request.user.is_superuser %}
                             <div class="mute-section">
                                 <button class="btn btn--main btn--pill" id="mute-button" onclick="toggleMuteForm()">
                                     禁言
@@ -192,19 +192,19 @@
                             <img src="${room.host_avatar || '/path/to/default/avatar.png'}" alt="${room.host}" />
                         </div>
 <span>${room.host}</span>
-                            
+
  </a>
  <div class="roomListRoom__actions">
                         <span>⭐已收藏</span>
                     </div>
                         <div class="avatar avatar--small">
-                        <div>       
+                        <div>
                         </div>
 
                     </div>
-                        </div>    
+                        </div>
   <div class="roomListRoom__content">
-                            <a>${room.name}</a>     
+                            <a>${room.name}</a>
                 </div>
   <div class="roomListRoom__meta">
                     <a  class="roomListRoom__joined">
