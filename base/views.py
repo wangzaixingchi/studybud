@@ -502,6 +502,7 @@ def announcement_list(request):
 
 
 # 编辑公告
+@login_required(login_url='/login')  # 确保用户已登录
 def edit_announcement(request, announcement_id=None):
     if announcement_id:
         announcement = get_object_or_404(Announcement, id=announcement_id)
