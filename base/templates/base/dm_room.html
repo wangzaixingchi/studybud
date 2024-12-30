@@ -48,7 +48,13 @@
                                             </div>
                                             <span>@{{ message.sender.username }}</span>
                                             <small>{{ message.created_at }}</small>
+                                            {% if message.sender.is_muted %}
+                                                <span class="alert alert-warning" style="color: red">
+                                                    该用户已被禁言,请注意其言论
+                                                </span>
+                                            {% endif %}
                                         </a>
+                                           
                                     </div>
                                 </div>
                             </div>

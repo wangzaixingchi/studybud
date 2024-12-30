@@ -182,15 +182,16 @@ from django.db import transaction
 from django.http import JsonResponse
 
 
-# 收藏异步
 def toggle_favorite(request, room_id):
     if request.method == 'POST' and request.user.is_authenticated:
         room = get_object_or_404(Room, id=room_id)
+
+        # 检查用户是否已收藏该房间
         if request.user in room.favorites.all():
-            room.favorites.remove(request.user)
+            room.favorites.remove(request.user)  # 取消收藏
             favorited = False
         else:
-            room.favorites.add(request.user)
+            room.favorites.add(request.user)  # 添加收藏
             favorited = True
 
         return JsonResponse({'favorited': favorited})
@@ -210,11 +211,30 @@ def toggle_like(request, message_id):
 
 
 # 我的收藏
-def my_favorites(request):
-    # 获取当前用户的收藏房间
-    favorites = request.user.favorites.all()  # 获取当前用户收藏的所有房间
-    return render(request, 'base/feed_component_favorite.html', {'favorites': favorites})
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import Room
 
+
+def my_favorites(request):
+    if request.user.is_authenticated:
+        favorites = request.user.favorite_rooms.all()  # 获取当前用户收藏的所有房间
+        favorite_rooms = []
+
+        for room in favorites:
+            favorite_rooms.append({
+                'id': room.id,
+                'name': room.name,
+                'host': room.host.username,
+                'host_avatar': room.host.avatar.url if room.host.avatar else None,
+                'created': room.created.isoformat(),  # 使用 ISO 格式
+                'participants_count': room.participants.count(),
+                'topic': room.topic.name if room.topic else '无主题',  # 处理可能没有主题的情况
+            })
+
+        return JsonResponse({'favorites': favorite_rooms})
+    else:
+        return JsonResponse({'favorites': []})  # 如果用户未登录，返回空列表
 
 # 创建房间
 @login_required(login_url='/login')
@@ -502,7 +522,6 @@ def announcement_list(request):
 
 
 # 编辑公告
-@login_required(login_url='/login')  # 确保用户已登录
 def edit_announcement(request, announcement_id=None):
     if announcement_id:
         announcement = get_object_or_404(Announcement, id=announcement_id)
@@ -528,6 +547,7 @@ def delete_announcement(request, announcement_id):
     announcement = get_object_or_404(Announcement, id=announcement_id)
     announcement.delete()
     return redirect('announcement_list')  # 重定向到公告列表页面
+
 
 # 添加好友
 @login_required(login_url='/login')
@@ -645,6 +665,7 @@ def fetch_messages(request, room_id):
         ]
     }
     return JsonResponse(data)
+
 
 class UserSearchView(View):
     def get(self, request):
