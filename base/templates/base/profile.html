@@ -35,14 +35,14 @@
                             原因: {{ user.mute_reason }}<br>
                             禁用至: {{ user.mute_until|date:"Y-m-d H:i:s" }}
                         </div>
-                        {% if request.user.is_superuser %}
+                        {% if request.user.is_staff %}
                             <form method="post" action="{% url 'unmute-user' user.id %}" style="display: inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn--main btn--pill">取消禁言</button>
                             </form>
                         {% endif %}
-                    {% elif user.is_superuser %}
-                        {% if  not request.user.is_superuser %}
+                    {% elif  not user.is_staff %}
+                        {% if  request.user.is_staff %}
                             <div class="mute-section">
                                 <button class="btn btn--main btn--pill" id="mute-button" onclick="toggleMuteForm()">
                                     禁言

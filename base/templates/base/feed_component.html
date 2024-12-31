@@ -85,7 +85,7 @@
 
             // 隐藏所有房间项
             items.forEach((item, index) => {
-                item.style.display = index >= start && index < end ? 'block' : 'none';
+                item.style.display = (index >= start && index < end) ? 'block' : 'none';
             });
 
             // 更新分页信息
@@ -111,13 +111,8 @@
             })
             .then(response => {
                 const button = document.getElementById(`favorite-button-${roomId}`);
-                if (response.data.favorited) {
-                    button.className = 'button-favorited';
-                    button.innerHTML = '⭐';
-                } else {
-                    button.className = 'button-not-favorited';
-                    button.innerHTML = '❌';
-                }
+                button.className = response.data.favorited ? 'button-favorited' : 'button-not-favorited';
+                button.innerHTML = response.data.favorited ? '⭐' : '❌';
             })
             .catch(error => {
                 console.error('Error toggling favorite:', error);
