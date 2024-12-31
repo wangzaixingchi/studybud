@@ -2,6 +2,8 @@ import hashlib
 from datetime import datetime
 
 from cryptography.fernet import Fernet
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -11,10 +13,10 @@ from django.utils import timezone
 from django.views import View
 from django.views.decorators.http import require_POST
 
-from .models import Room, Topic, Message, User, Announcement, DirectMessageRoom
+from .models import Room, Topic, Message, User, Announcement, DirectMessageRoom, Profile, RoomHistory
 from .forms import RoomForm, UserForm, MyUserCreationForm
 from django.http import HttpResponseRedirect
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from .forms import MessageForm
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -106,17 +108,20 @@ def home(request):
 @login_required(login_url='/login/')
 def room(request, pk):
     room = get_object_or_404(Room, id=pk)
-
-    if not request.user.is_authenticated:
-        return redirect('/login/')
-
     room_messages, participants = get_room_info(room)
-
+    room_history, created = RoomHistory.objects.get_or_create(
+        user=request.user,
+        room=room,
+        defaults={'timestamp': timezone.now()}
+    )
+    if not created:
+        # 如果记录已存在，更新时间戳
+        room_history.timestamp = timezone.now()
+        room_history.save()
     # 检查房间是否加密
     if room.is_encrypted:
         # 检查用户是否已通过密码验证
         if request.session.get(f'room_access_{room.id}', False):
-            # 用户已验证，允许访问
             if request.method == 'POST':
                 return handle_message_post(request, room)
 
@@ -143,7 +148,7 @@ def room(request, pk):
             }
             return render(request, 'base/room_secret.html', context)  # 跳转到房间密码输入页面
 
-    # 如果房间未加密，允许用户发送消息
+    # 处理发送消息
     if request.method == 'POST':
         return handle_message_post(request, room)
 
@@ -181,7 +186,29 @@ from django.db import transaction
 # 房间收藏
 from django.http import JsonResponse
 
+#浏览记录
 
+class RoomHistoryView(View):
+    def get(self, request):
+        if request.user.is_authenticated:
+            room_history = RoomHistory.objects.filter(user=request.user).values('room__name', 'timestamp')
+            paginator = Paginator(room_history, 10)  # 每页显示 10 条记录
+
+            page_number = request.GET.get('page')
+            page_obj = paginator.get_page(page_number)
+
+            history_list = list(page_obj)  # 转换为列表以便于 JSON 序列化
+
+            return JsonResponse({
+                'status': 'success',
+                'data': history_list,
+                'has_next': page_obj.has_next(),
+                'has_previous': page_obj.has_previous(),
+                'next_page_number': page_obj.next_page_number() if page_obj.has_next() else None,
+                'previous_page_number': page_obj.previous_page_number() if page_obj.has_previous() else None,
+            })
+
+        return JsonResponse({'status': 'error', 'message': '未登录'})
 def toggle_favorite(request, room_id):
     if request.method == 'POST' and request.user.is_authenticated:
         room = get_object_or_404(Room, id=room_id)
@@ -236,6 +263,7 @@ def my_favorites(request):
     else:
         return JsonResponse({'favorites': []})  # 如果用户未登录，返回空列表
 
+
 # 创建房间
 @login_required(login_url='/login')
 def createRoom(request):
@@ -272,16 +300,33 @@ def createRoom(request):
 @login_required(login_url='/login/')
 def userProfile(request, pk):
     user = User.objects.get(id=pk)
+    profile, created = Profile.objects.get_or_create(user=user)  # 确保有Profile实例
+
     rooms = user.room_set.all()
     room_messages = user.message_set.all()
     topics = Topic.objects.all()
     favorites = user.favorites_rooms.all()  # 获取用户的收藏房间
+    followers_count = profile.followers_count
+    followers = profile.followers.all()  # 获取关注
+    following_count = profile.followers.count()  # 关注数量
+    paginator = Paginator(followers, 5)  # 每页显示5个关注者
+    page_number = request.GET.get('page')
+    followers_page = paginator.get_page(page_number)
+    room_history = RoomHistory.objects.filter(user=user)  # 获取房间历史记录
     context = {
         'user': user,
         'rooms': rooms,
         'room_messages': room_messages,
         'topics': topics,
-        'favorites': favorites}
+        'favorites': favorites,
+        'following_count': following_count,
+        'followers_count': followers_count,
+        'followers': followers,
+        'followers': followers_page,
+        'followers_page': followers_page,
+        'room_history': room_history,
+
+    }
     return render(request, 'base/profile.html', context)
 
 
@@ -672,8 +717,41 @@ class UserSearchView(View):
         username = request.GET.get('user', '')
         if username:
             users = User.objects.filter(username__icontains=username)  # 使用模糊查询
-            if users.exists():
-                return render(request, 'base/user_search_results.html', {'users': users})  # 显示结果
+            paginator = Paginator(users, 5)  # 每页显示10个用户
+            page_number = request.GET.get('page')
+            users_page = paginator.get_page(page_number)
+
+            if users_page:
+                return render(request, 'base/user_search_results.html', {
+                    'users': users_page,
+                    'query': username,
+                })  # 显示结果
             else:
                 return render(request, 'base/user_not_found.html')  # 用户未找到
         return redirect('home')  # 如果没有提供用户名，重定向回主页
+User = get_user_model()
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
+@login_required(login_url='/login')
+def follow_user(request, user_id):
+    if request.method == 'POST':
+        user_to_follow = get_object_or_404(User, id=user_id)
+
+        # 确保当前用户未关注该用户
+        if request.user != user_to_follow and user_to_follow not in request.user.profile.followers.all():
+            request.user.profile.followers.add(user_to_follow)
+            return JsonResponse({'status': 'success', 'action': 'follow', 'user_id': user_id})
+
+    return JsonResponse({'status': 'error', 'message': 'Could not follow user.'})
+@login_required(login_url='/login')
+def unfollow_user(request, user_id):
+    user_to_unfollow = get_object_or_404(User, id=user_id)
+    request.user.profile.followers.remove(user_to_unfollow)
+    return JsonResponse({'status': 'success', 'action': 'unfollow', 'user_id': user_id})

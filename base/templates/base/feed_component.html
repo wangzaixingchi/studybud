@@ -20,9 +20,9 @@
                             class="{% if user in room.favorites.all %}button-favorited{% else %}button-not-favorited{% endif %}" 
                             onclick="toggleFavorite({{ room.id }})">
                         {% if user in room.favorites.all %}
-                            ⭐
+                            ⭐已收藏
                         {% else %}
-                            ❌
+                            ❌可收藏
                         {% endif %}
                     </button>
                 </div>
@@ -112,7 +112,7 @@
             .then(response => {
                 const button = document.getElementById(`favorite-button-${roomId}`);
                 button.className = response.data.favorited ? 'button-favorited' : 'button-not-favorited';
-                button.innerHTML = response.data.favorited ? '⭐' : '❌';
+                button.innerHTML = response.data.favorited ? '⭐已收藏' : '❌可收藏';
             })
             .catch(error => {
                 console.error('Error toggling favorite:', error);

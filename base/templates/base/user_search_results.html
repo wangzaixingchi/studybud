@@ -1,16 +1,14 @@
 {% extends 'main.html' %}
 {% block content %}
-    <main class="layout layout--3">
+    <main class="layout layout--3" >
         <div class="container">
             <!-- Topics Start -->
             {% include 'base/topics_component.html' %}
-     <!-- Room List Start -->
-        <div class="roomList">
-          
-            <!-- Topics End -->
-            <h1 style="text-align: center;">搜索结果</h1>
+            <!-- Room List Start -->
+            <div class="roomList" >
+                <h1 style="text-align: center;">搜索结果</h1>
             {% if users %}
-                <ul class="user-list">
+                <ul class="user-list" style="height:300px">
                     {% for user in users %}
                         <li class="user-item">
                             <a href="{% url 'user-profile' user.id %}" class="user-link">
@@ -22,16 +20,29 @@
                         </li>
                     {% endfor %}
                 </ul>
+
+                <!-- 分页栏放在这里 -->
+                <div class="pagination" style="text-align: center; margin-top: 20px;">
+                    {% if users.has_previous %}
+                        <a href="?user={{ query }}&page=1">第一页</a>
+                        <a href="?user={{ query }}&page={{ users.previous_page_number }}">上一页</a>
+                    {% endif %}
+
+                    <span>第 {{ users.number }} 页，共 {{ users.paginator.num_pages }} 页</span>
+
+                    {% if users.has_next %}
+                        <a href="?user={{ query }}&page={{ users.next_page_number }}">下一页</a>
+                        <a href="?user={{ query }}&page={{ users.paginator.num_pages }}">最后一页</a>
+                    {% endif %}
+                </div>
             {% else %}
                 <p style="text-align: center;">没有找到匹配的用户。</p>
             {% endif %}
             <a href="{% url 'home' %}" style="display: block; text-align: center; margin-top: 20px;">返回主页</a>
-              </div>
+        </div>
             <!-- Activities Start -->
             {% include 'base/activity_component.html' %}
-
             <!-- Activities End -->
         </div>
     </main>
 {% endblock content %}
-

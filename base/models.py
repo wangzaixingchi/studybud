@@ -69,6 +69,15 @@ class Room(models.Model):
         self.save()
 
 
+class RoomHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)  # 记录时间
+
+    class Meta:
+        ordering = ['-timestamp']  # 按时间降序排序
+
+
 class Message(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='发送用户')  # 发送消息的用户
     room = models.ForeignKey(Room, on_delete=models.CASCADE, verbose_name='所在房间')  # 消息所在的房间
@@ -153,3 +162,19 @@ class DirectMessage(models.Model):
 
     def __str__(self):
         return f"{self.sender.username}: {self.content}"
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    followers = models.ManyToManyField(User, related_name='following', blank=True)  # 关注
+    following = models.ManyToManyField(User, related_name='followers', blank=True)  # 我关注的人
+    def __str__(self):
+        return self.user.username
+
+    @property
+    def following_count(self):
+        return self.following.count()
+
+    @property
+    def followers_count(self):
+        return self.followers.count()

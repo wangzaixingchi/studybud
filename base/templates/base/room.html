@@ -88,7 +88,9 @@
                                                         💙
                                                     {% endif %}
                                                 </span>
-                                            </p>
+                                                <span class="likes-count" data-likes-count="{{ message.likes.count }}">
+                                {{ message.likes.count }} 点赞
+                            </span></p>
                                             {% if message.user.is_muted %}
                                                 <div class="alert alert-warning" style="color: red">
                                                     该用户已被禁言,请注意其言论
@@ -110,7 +112,7 @@
                                     <script>
                                         function toggleLike(element) {
                                             const messageId = element.getAttribute('data-message-id');
-
+                                            const likesCountSpan = element.nextElementSibling; // Get the likes count element
                                             // 添加动画类
                                             element.classList.add('like-animation');
 
@@ -125,6 +127,15 @@
                                                         element.classList.toggle('liked');
                                                         // 更新文本
                                                         element.textContent = element.classList.contains('liked') ? '💕' : '💙';
+                                                        // Update the likes count
+                                                        let currentCount = parseInt(likesCountSpan.getAttribute('data-likes-count'));
+                                                        if (element.classList.contains('liked')) {
+                                                            currentCount += 1; // Increment if liked
+                                                        } else {
+                                                            currentCount -= 1; // Decrement if unliked
+                                                        }
+                                                        likesCountSpan.setAttribute('data-likes-count', currentCount);
+                                                        likesCountSpan.textContent = `${currentCount} 点赞`; // Update displayed count
                                                     }
                                                 })
                                                 .catch(error => console.error('Error:', error));
@@ -163,7 +174,8 @@
                                 </button>
                                 <img id="imagePreview" class="image-preview" alt="Image Preview"
                                      style="display: none; width: 50px; height: 50px; margin-left: 10px;"/>
-                                <button type="submit" class="btn btn--send" style="background-color: #71C6DD">发送</button>
+                                <button type="submit" class="btn btn--send" style="background-color: #71C6DD">发送
+                                </button>
                             </div>
                         </form>
 

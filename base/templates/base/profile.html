@@ -1,225 +1,218 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<main class="profile-page layout layout--3">
-    <div class="container">
-        <!-- Topics Start -->
-        {% include 'base/topics_component.html' %}
-        <!-- Topics End -->
-
-        <!-- Room List Start -->
-        <div class="roomList">
-            <div class="profile">
-                <div class="profile__avatar">
-                    <div class="avatar avatar--large active">
-                        <img src="{{ user.avatar.url }}" />
-                    </div>
-                </div>
-                <div class="profile__info">
-                    <h3>{{ user.username }}</h3>
-                    <p>@{{ user.username }}</p>
-                    {% if request.user == user %}
-                        <a href="{% url 'update-user' %}" class="btn btn--main btn--pill">编辑资料</a>
-                    {% endif %}
-                </div>
-                <div class="profile__info">
-                    {% if request.user.is_authenticated and request.user != user %}
-                        <a href="{% url 'create_dm_room' user.id %}" class="btn btn--main btn--pill">私聊</a>
-                    {% endif %}
-                </div>
-                <br>
-                <div class="profile__info">
-                    {% if user.is_muted %}
-                        <div class="alert alert-warning">
-                            <strong>此用户已被禁言</strong><br>
-                            原因: {{ user.mute_reason }}<br>
-                            禁用至: {{ user.mute_until|date:"Y-m-d H:i:s" }}
+    <main class="profile-page layout layout--3">
+        <div class="container">
+            <!-- Topics Start -->
+            {% include 'base/topics_component.html' %}
+            <!-- Topics End -->
+  
+            <!-- Room List Start -->
+            <div class="roomList">
+                <div class="profile">
+                    <div class="profile__avatar">
+                        <div class="avatar avatar--large active">
+                            <img src="{{ user.avatar.url }}" alt="{{ user.username }} 的头像"/>
                         </div>
-                        {% if request.user.is_staff %}
-                            <form method="post" action="{% url 'unmute-user' user.id %}" style="display: inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn--main btn--pill">取消禁言</button>
-                            </form>
-                        {% endif %}
-                    {% elif  not user.is_staff %}
-                        {% if  request.user.is_staff %}
-                            <div class="mute-section">
-                                <button class="btn btn--main btn--pill" id="mute-button" onclick="toggleMuteForm()">
-                                    禁言
-                                </button>
-                                <form id="mute-form" method="post" action="{% url 'mute-user' user.id %}" style="display: none;">
-                                    {% csrf_token %}
-                                    <div class="form-group">
-                                        <label for="mute_reason">禁言原因:</label>
-                                        <input type="text" name="mute_reason" required class="form-control">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="mute_until">禁言到期时间:</label>
-                                        <input type="datetime-local" name="mute_until" required class="form-control">
-                                    </div>
-                                    <button type="submit" class="btn btn--main btn--pill">禁用</button>
-                                </form>
-                            </div>
-                        {% endif %}
-                    {% endif %}
-                </div>
-
-                <div class="profile__about">
-                    <h3>简介</h3>
-                    <p>{{ user.bio }}</p>
-                </div>
-            </div>
-
-            <div class="roomList__header">
-                <div style="display: flex; width: 100%;">
-                    <a id="my-rooms" href="#" style="flex: 1; text-align: center;" class="active" onclick="loadContent('rooms')">
-                        房间
-                    </a>
-                    {% if request.user == user %}
-                    <a id="my-favorites" href="#" style="flex: 1; text-align: center;" onclick="loadContent('favorites')">
-                        我的收藏
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div id="content-area">
-                <div id="rooms-content">
-                    {% include 'base/feed_component.html' %}
-                </div>
-                <div id="favorites-content" style="display: none;">
-                    <div class="favorites-section">
-                        {% include 'base/feed_component_favorite.html' %}
                     </div>
-                </div>
-            </div>
-        </div>
-        <!-- Room List End -->
-
-        <!-- Activities Start -->
-        {% include 'base/activity_component.html' %}
-        <!-- Activities End -->
-    </div>
-</main>
-
-<style>
-    .active {
-        font-weight: bold;
-        color: #007BFF; /* 或其他您希望的颜色 */
-    }
-
-    a:hover {
-        text-decoration: underline; /* 鼠标悬浮效果 */
-        color: #0056b3; /* 鼠标悬浮时的颜色 */
-    }
-
-    .alert {
-        background-color: #fff3cd;
-        border-color: #ffeeba;
-        color: #856404;
-        padding: 10px;
-        margin-top: 10px;
-        border-radius: 5px;
-    }
-
-    .mute-section {
-        margin-top: 15px;
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-    .form-control {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ced4da;
-        border-radius: 5px;
-        box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-    }
-
-    .form-control:focus {
-        border-color: #007BFF;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    }
-</style>
-
-<script>
-    function toggleMuteForm() {
-        const form = document.getElementById('mute-form');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function loadContent(tab) {
-        const roomsContent = document.getElementById('rooms-content');
-        const favoritesContent = document.getElementById('favorites-content');
-
-        if (tab === 'rooms') {
-            roomsContent.style.display = 'block';
-            favoritesContent.style.display = 'none';
-            setActiveTab('my-rooms');
-        } else if (tab === 'favorites') {
-            roomsContent.style.display = 'none';
-            favoritesContent.style.display = 'block';
-            setActiveTab('my-favorites');
-            loadFavorites();  // 在切换到收藏时加载收藏内容
-        }
-    }
-
-    function setActiveTab(activeId) {
-        const tabs = ['my-rooms', 'my-favorites'];
-        tabs.forEach(id => {
-            const tab = document.getElementById(id);
-            if (tab) {
-                tab.classList.toggle('active', id === activeId);
-            }
-        });
-    }
-
-   function loadFavorites() {
-    fetch('/my-favorites/')
-        .then(response => response.json())
-        .then(data => {
-            const favoritesList = document.getElementById('favorites-list');
-            favoritesList.innerHTML = '';  // 清空现有内容
-            if (data.favorites.length > 0) {
-                data.favorites.forEach(room => {
-                    const roomItem = document.createElement('div');
-                    roomItem.innerHTML = `  <div class="roomListRoom">
-                <div class="roomListRoom__header">
- <a  class="roomListRoom__author">
-<div class="avatar avatar--small">
-                            <img src="${room.host_avatar || '/path/to/default/avatar.png'}" alt="${room.host}" />
-                        </div>
-<span>${room.host}</span>
-
- </a>
- <div class="roomListRoom__actions">
-                        <span>⭐已收藏</span>
+                    <div class="profile__info">
+                        <h3>{{ user.username }}</h3>
+                        <p>@{{ user.username }}</p>
+                        {% if request.user == user %}
+                            <a href="{% url 'update-user' %}" class="btn btn--main btn--pill">编辑资料</a>
+                        {% endif %}
                     </div>
+              
+                 {% if request.user.is_authenticated and request.user != user %}
+                        <div class="profile__info">
+                            <button class="btn btn--main btn--pill" id="follow-button-{{ user.id }}" onclick="toggleFollow({{ user.id }})">
+                                {% if user in request.user.profile.followers.all %}
+                                    取关
+                                {% else %}
+                                    关注
+                                {% endif %}
+                            </button>
+                      </div>
+                        {% endif %}
+                 
+                    <div class="profile__info">
+                        {% if request.user.is_authenticated and request.user != user %}
+                            <a href="{% url 'create_dm_room' user.id %}" class="btn btn--main btn--pill">私聊</a>
+                        {% endif %}
+                    </div>
+                 {% if request.user.is_authenticated and request.user == user %}
+                    <div class="profile__info">
+                        <p>关注数: <span id="followers-count">{{ followers_count }}</span></p>
+
+                       
+                            <button class="btn btn--main btn--pill" id="toggle-followers"
+                                    onclick="toggleFollowersList()">查看关注列表
+                            </button>
+                            <div id="followers-list" style="display: none;">
+                                <ul>
+                                    {% for follower in followers %}
+                                     <li class="follower-item">
                         <div class="avatar avatar--small">
-                        <div>
+                            <img src="{{ follower.avatar.url }}" alt="{{ follower.username }} 的头像"/>
                         </div>
+                        <a href="{% url 'user-profile' follower.id %}">{{ follower.username }}</a>
+                    </li>
+                {% empty %}
+                    <li>没有关注</li>
+                {% endfor %}
+                                </ul>
 
+                                <div class="pagination">
+                                    {% if followers_page.has_previous %}
+                                        <a href="?page=1">第一页</a>
+                                        <a href="?page={{ followers_page.previous_page_number }}">上一页</a>
+                                    {% endif %}
+
+                                    <span>第 {{ followers_page.number }} 页，共 {{ followers_page.paginator.num_pages }} 页</span>
+
+                                    {% if followers_page.has_next %}
+                                        <a href="?page={{ followers_page.next_page_number }}">下一页</a>
+                                        <a href="?page={{ followers_page.paginator.num_pages }}">最后一页</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                     
+
+                       
                     </div>
+   {% endif %}
+                    <div class="profile__about">
+                        <h3>简介</h3>
+                        <p>{{ user.bio }}</p>
+                    </div>
+                </div>
+
+                <div class="roomList__header">
+                    <div style="display: flex; width: 100%;">
+                        <a id="my-rooms" href="#" style="flex: 1; text-align: center;" class="active"
+                           onclick="loadContent('rooms')">
+                            房间
+                        </a>
+                        {% if request.user == user %}
+                            <a id="my-favorites" href="#" style="flex: 1; text-align: center;"
+                               onclick="loadContent('favorites')">
+                                我的收藏
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div id="content-area">
+                    <div id="rooms-content">
+                        {% include 'base/feed_component.html' %}
+                    </div>
+                    <div id="favorites-content" style="display: none;">
+                        <div class="favorites-section" id="favorites-list">
+                            {% include 'base/feed_component_favorite.html' %}
                         </div>
-  <div class="roomListRoom__content">
-                            <a>${room.name}</a>
+                    </div>
                 </div>
-  <div class="roomListRoom__meta">
-                    <a  class="roomListRoom__joined">
-                       ${room.participants_count} 参加
-                    </a>
-                    <p class="roomListRoom__topic">话题: ${room.topic}</p>
-                </div>
-                    `;
-                    favoritesList.appendChild(roomItem);
-                });
-            } else {
-                favoritesList.textContent = '您还没有收藏任何房间！';
+            </div>
+            <!-- Room List End -->
+
+            <!-- Activities Start -->
+            {% include 'base/activity_component.html' %}
+            <!-- Activities End -->
+        </div>
+    </main>
+
+    <script>
+        function toggleFollowersList() {
+            const followersList = document.getElementById('followers-list');
+            followersList.style.display = followersList.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function toggleFollow(userId) {
+            const button = document.getElementById(`follow-button-${userId}`);
+            const action = button.textContent.includes('关注') ? 'follow' : 'unfollow';
+            const url = action === 'follow' ? `/follow/${userId}/` : `/unfollow/${userId}/`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        button.textContent = action === 'follow' ? '取关' : '关注';
+                    } else {
+                        alert(data.message); // 显示错误消息
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function loadContent(tab) {
+            const roomsContent = document.getElementById('rooms-content');
+            const favoritesContent = document.getElementById('favorites-content');
+
+            if (tab === 'rooms') {
+                roomsContent.style.display = 'block';
+                favoritesContent.style.display = 'none';
+                setActiveTab('my-rooms');
+            } else if (tab === 'favorites') {
+                roomsContent.style.display = 'none';
+                favoritesContent.style.display = 'block';
+                setActiveTab('my-favorites');
+                loadFavorites();  // 在切换到收藏时加载收藏内容
             }
-        })
-        .catch(error => console.error('Error fetching favorites:', error));
-}
-</script>
+        }
+
+        function setActiveTab(activeId) {
+            const tabs = ['my-rooms', 'my-favorites'];
+            tabs.forEach(id => {
+                const tab = document.getElementById(id);
+                if (tab) {
+                    tab.classList.toggle('active', id === activeId);
+                }
+            });
+        }
+
+        function loadFavorites() {
+            fetch('/my-favorites/')
+                .then(response => response.json())
+                .then(data => {
+                    const favoritesList = document.getElementById('favorites-list');
+                    favoritesList.innerHTML = '';  // 清空现有内容
+                    if (data.favorites.length > 0) {
+                        data.favorites.forEach(room => {
+                            const roomItem = document.createElement('div');
+                            roomItem.innerHTML = `
+                            <div class="roomListRoom">
+                                <div class="roomListRoom__header">
+                                    <a class="roomListRoom__author">
+                                        <div class="avatar avatar--small">
+                                            <img src="${room.host_avatar || '/path/to/default/avatar.png'}" alt="${room.host}" />
+                                        </div>
+                                        <span>${room.host}</span>
+                                    </a>
+                                    <div class="roomListRoom__actions">
+                                        <span>⭐已收藏</span>
+                                    </div>
+                                </div>
+                                <div class="roomListRoom__content">
+                                    <a>${room.name}</a>
+                                </div>
+                                <div class="roomListRoom__meta">
+                                    <a class="roomListRoom__joined">${room.participants_count} 参加</a>
+                                    <p class="roomListRoom__topic">话题: ${room.topic}</p>
+                                </div>
+                            </div>`;
+                            favoritesList.appendChild(roomItem);
+                        });
+                    } else {
+                        favoritesList.textContent = '您还没有收藏任何房间！';
+                    }
+                })
+                .catch(error => console.error('Error fetching favorites:', error));
+        }
+    </script>
 {% endblock %}

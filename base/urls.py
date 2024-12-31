@@ -3,7 +3,7 @@ from . import views
 
 from django.contrib import admin
 
-from .views import UserSearchView
+from .views import UserSearchView, RoomHistoryView
 
 urlpatterns = [
     path('login/', views.loginPage, name="login"),
@@ -45,4 +45,9 @@ path('room/<int:room_id>/send/', views.send_message, name='send_message'),  # �
     path('search-user/', UserSearchView.as_view(), name='search-user'),  # 新增搜索用户的路由
     path('dm/room/<int:room_id>/', views.dm_room, name='dm_room'),
     path('room/<int:room_id>/messages/', views.get_messages, name='get_messages'),  # 获取消息视图
+    path('follow/<int:user_id>/', views.follow_user, name='follow-user'),
+    path('unfollow/<int:user_id>/', views.unfollow_user, name='unfollow-user'),
+    path('profile/<int:user_id>/', views.userProfile, name='user-profile'),
+
+    path('room-history/', RoomHistoryView.as_view(), name='room-history'),
 ]
