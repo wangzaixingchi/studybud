@@ -150,6 +150,12 @@
                                                  class="message-image"
                                                  style="max-width: 20%; height: auto;"/>  <!-- 显示图片 -->
                                         {% endif %}
+                                        {% if message.video %}
+                                            <video controls style="max-width: 20%; height: auto;">
+                                                <source src="{{ message.video.url }}" type="video/mp4">
+                                                您的浏览器不支持视频标签。
+                                            </video>  <!-- 显示视频 -->
+                                        {% endif %}
                                     </div>
                                 </div>
                             {% endfor %}
@@ -172,8 +178,19 @@
                                 <button type="button" class="btn btn--upload" id="uploadButton"
                                         style="background-color: #71C6DD">+
                                 </button>
+                                <input type="file" name="video" accept="video/*" class="video-input" id="videoInput"
+                                       style="display: none;"/>
+                                <button type="button" class="btn btn--upload" id="videoUploadButton"
+                                        style="background-color: #71C6DD">上传视频
+                                </button>
                                 <img id="imagePreview" class="image-preview" alt="Image Preview"
                                      style="display: none; width: 50px; height: 50px; margin-left: 10px;"/>
+
+                                <video id="videoPreview" class="video-preview" controls
+                                       style="display: none;  width: 50px; height: 50px; margin-left: 10px;">
+                                    <source id="videoSource" src="" type="video/mp4">
+                                    您的浏览器不支持视频标签。
+                                </video>
                                 <button type="submit" class="btn btn--send" style="background-color: #71C6DD">发送
                                 </button>
                             </div>
@@ -190,7 +207,9 @@
                             document.getElementById('uploadButton').addEventListener('click', function () {
                                 document.getElementById('imageInput').click();
                             });
-
+                            document.getElementById('videoUploadButton').addEventListener('click', function () {
+                                document.getElementById('videoInput').click();
+                            });
                             document.getElementById('imageInput').addEventListener('change', function () {
                                 const file = this.files[0];
                                 if (file) {
@@ -198,18 +217,36 @@
                                     reader.onload = function (e) {
                                         document.getElementById('imagePreview').src = e.target.result;
                                         document.getElementById('imagePreview').style.display = 'block';
+                                        document.getElementById('videoPreview').style.display = 'none'; // 隐藏视频预览
                                     }
                                     reader.readAsDataURL(file);
                                 } else {
                                     document.getElementById('imagePreview').style.display = 'none';
                                 }
                             });
-
-                            function validateForm() {
+  document.getElementById('videoInput').addEventListener('change', function () {
+                                const file = this.files[0];
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = function (e) {
+                                        const videoPreview = document.getElementById('videoPreview');
+                                        const videoSource = document.getElementById('videoSource');
+                                        videoSource.src = e.target.result;
+                                        videoPreview.load();
+                                        videoPreview.style.display = 'block'; // 显示视频预览
+                                        document.getElementById('imagePreview').style.display = 'none'; // 隐藏图片预览
+                                    }
+                                    reader.readAsDataURL(file);
+                                } else {
+                                    document.getElementById('videoPreview').style.display = 'none';
+                                }
+                            });
+                             function validateForm() {
                                 const messageBody = document.getElementById('messageBody').value.trim();
                                 const imageInput = document.getElementById('imageInput').files.length;
+                                const videoInput = document.getElementById('videoInput').files.length;
 
-                                if (!messageBody && imageInput === 0) {
+                                if (!messageBody && imageInput === 0 && videoInput === 0) {
                                     showToast(); // 显示 UI 提示
                                     return false; // 阻止表单提交
                                 }

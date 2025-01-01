@@ -19,55 +19,7 @@
             <path d="M16 21l-13-13h-3l16 16 16-16h-3l-13 13z"></path>
         </svg>
     </a>
-  <div>
-    <h3>房间历史记录</h3>
-    <ul id="history-list"></ul>
-    <button id="prev-page" style="display: none;">上一页</button>
-    <button id="next-page" style="display: none;">下一页</button>
-</div>
-<script>
-    let currentPage = 1;
-
-    function loadHistory(page = 1) {
-        fetch(`/room-history/?page=${page}`)
-            .then(response => response.json())
-            .then(data => {
-                const historyList = document.getElementById('history-list');
-                historyList.innerHTML = '';  // 清空当前列表
-                
-                if (data.status === 'success') {
-                    data.data.forEach(history => {
-                        const listItem = document.createElement('li');
-                        listItem.innerHTML = `<a>${history.room__name}</a> - ${new Date(history.timestamp).toLocaleString()}`;
-                        historyList.appendChild(listItem);
-                    });
-
-                    // 更新分页按钮
-                    document.getElementById('prev-page').style.display = data.has_previous ? 'inline' : 'none';
-                    document.getElementById('next-page').style.display = data.has_next ? 'inline' : 'none';
-                } else {
-                    historyList.innerHTML = '<li>没有历史记录。</li>';
-                }
-            })
-            .catch(error => console.error('Error fetching history:', error));
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        loadHistory();  // 默认加载第一页
-
-        document.getElementById('prev-page').addEventListener('click', function() {
-            if (currentPage > 1) {
-                currentPage--;
-                loadHistory(currentPage);
-            }
-        });
-
-        document.getElementById('next-page').addEventListener('click', function() {
-            currentPage++;
-            loadHistory(currentPage);
-        });
-    });
-</script>
+ 
 </div>
 
 

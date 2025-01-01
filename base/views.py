@@ -191,8 +191,8 @@ from django.http import JsonResponse
 class RoomHistoryView(View):
     def get(self, request):
         if request.user.is_authenticated:
-            room_history = RoomHistory.objects.filter(user=request.user).values('room__name', 'timestamp')
-            paginator = Paginator(room_history, 10)  # 每页显示 10 条记录
+            room_history = RoomHistory.objects.filter(user=request.user).values('room__id','room__name', 'timestamp')
+            paginator = Paginator(room_history, 5)  # 每页显示 10 条记录
 
             page_number = request.GET.get('page')
             page_obj = paginator.get_page(page_number)
@@ -463,7 +463,7 @@ def get_ranklist(request):
 
 def room_list_view(request):
     rooms = Room.objects.all()  # 获取所有房间
-    paginator = Paginator(rooms, 2)  # 每页显示 10 个房间
+    paginator = Paginator(rooms, 2)  # 每页显示2个房间
 
     page_number = request.GET.get('page')  # 获取当前页码
     page_obj = paginator.get_page(page_number)  # 获取当前页的房间对象

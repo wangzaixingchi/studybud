@@ -1,131 +1,142 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<main class="profile-page layout layout--2">
-    <div class="container">
-        <div class="room">
-            <div class="room__top">
-                <div class="room__topLeft">
-                    <a href="{% url 'home' %}">
-                        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-                            <title>arrow-left</title>
-                            <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
-                        </svg>
-                    </a>
-                    <h3>与
-                        {% if room.user2 == request.user %}
-                            {{ room.user1.username }} 的聊天
-                        {% else %}
-                            {{ room.user2.username }} 的聊天
-                        {% endif %}
-                    </h3>
-                </div>
-            </div>
-            <div class="room__box scroll">
-                <div class="room__header scroll">
-                    <div class="room__info">
-                        <h3>私聊中</h3>
-                    </div>
-                    <div class="room__hosted">
-                        <p>聊天</p>
-                        <a class="room__author">
-                            <div class="avatar avatar--small">
-                                <img src="https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg"/>
-                            </div>
+    <main class="profile-page layout layout--2">
+        <div class="container">
+            <div class="room">
+                <div class="room__top">
+                    <div class="room__topLeft">
+                        <a href="{% url 'home' %}">
+                            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                                 viewBox="0 0 32 32">
+                                <title>arrow-left</title>
+                                <path d="M13.723 2.286l-13.723 13.714 13.719 13.714 1.616-1.611-10.96-10.96h27.625v-2.286h-27.625l10.965-10.965-1.616-1.607z"></path>
+                            </svg>
                         </a>
+                        <h3>与
+                            {% if room.user2 == request.user %}
+                                {{ room.user1.username }} 的聊天
+                            {% else %}
+                                {{ room.user2.username }} 的聊天
+                            {% endif %}
+                        </h3>
                     </div>
                 </div>
-                <div class="room__conversation" id="conversation">
-                    <div class="threads scroll" id="threads">
-                        {% for message in room.messages.all %}
-                        <div class="thread">
-                            <div class="thread__top">
-                                <div class="thread__author">
-                                    <div class="room__hosted">
-                                        <a class="room__author">
-                                            <div class="avatar avatar--small">
-                                                <img src="{{ message.sender.avatar.url }}" alt="{{ message.sender.username }} 的头像" class="avatar--small" />
-                                            </div>
-                                            <span>@{{ message.sender.username }}</span>
-                                            <small>{{ message.created_at }}</small>
-                                            {% if message.sender.is_muted %}
-                                                <span class="alert alert-warning" style="color: red">
+                <div class="room__box scroll">
+                    <div class="room__header scroll">
+                        <div class="room__info">
+                            <h3>私聊中</h3>
+                        </div>
+                        <div class="room__hosted">
+                            <p>聊天</p>
+                            <a class="room__author">
+                                <div class="avatar avatar--small">
+                                    <img src="https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg"/>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="room__conversation" id="conversation">
+                        <div class="threads scroll" id="threads">
+                            {% for message in room.messages.all %}
+                                <div class="thread">
+                                    <div class="thread__top">
+                                        <div class="thread__author">
+                                            <div class="room__hosted">
+                                                <a class="room__author">
+                                                    <div class="avatar avatar--small">
+                                                        <img src="{{ message.sender.avatar.url }}"
+                                                             alt="{{ message.sender.username }} 的头像"
+                                                             class="avatar--small"/>
+                                                    </div>
+                                                    <span>@{{ message.sender.username }}</span>
+                                                    <small>{{ message.created_at }}</small>
+                                                    {% if message.sender.is_muted %}
+                                                        <span class="alert alert-warning" style="color: red">
                                                     该用户已被禁言,请注意其言论
                                                 </span>
-                                            {% endif %}
-                                        </a>
-                                           
+                                                    {% endif %}
+                                                </a>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="thread__details">
+                                        <p>{{ message.content }}</p>
+                                        {% if message.image %}
+                                            <img src="{{ message.image.url }}" alt="Message Image" class="message-image"
+                                                 style="max-width: 300px; height: auto;"/>
+                                        {% endif %}
                                     </div>
                                 </div>
-                            </div>
-                            <div class="thread__details">
-                                <p>{{ message.content }}</p>
-                                {% if message.image %}
-                                <img src="{{ message.image.url }}" alt="Message Image" class="message-image" style="max-width: 300px; height: auto;"/>
-                                {% endif %}
-                            </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
                     </div>
                 </div>
-            </div>
-            <div class="room__message">
-                <form id="messageForm" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="input-container">
-                        <input name="content" placeholder="输入消息..." class="message-input" required></input>
-                        <input type="file" name="image" accept="image/*" class="image-input" style="display: none;" id="imageInput"/>
-                        <button type="button" class="btn btn--upload" id="uploadButton" style="background-color: #2aabd2">+</button>
-                        <img id="imagePreview" class="image-preview" alt="Image Preview" style="display: none; width: 50px; height: 50px; margin-left: 10px;"/>
-                        <button type="submit" class="btn btn--send" style="background-color: #2aabd2">发送</button>
-                    </div>
-                </form>
+                <div class="room__message">
+                    <form id="messageForm" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="input-container">
+                            <input name="content" placeholder="输入消息..." class="message-input" required></input>
+                            <input type="file" name="image" accept="image/*" class="image-input" style="display: none;"
+                                   id="imageInput"/>
+                            <button type="button" class="btn btn--upload" id="uploadButton"
+                                    style="background-color: #2aabd2">+
+                            </button>
+                            <button type="button" class="btn btn--upload" id="videoUploadButton"
+                                    style="background-color: #71C6DD">上传视频
+                            </button>
+                            <img id="imagePreview" class="image-preview" alt="Image Preview"
+                                 style="display: none; width: 50px; height: 50px; margin-left: 10px;"/>
+                            <button type="submit" class="btn btn--send" style="background-color: #2aabd2">发送</button>
+                        </div>
+                    </form>
 
-                <script>
-                    // 页面加载时滚动到最新消息
-                    window.onload = function() {
-                        const conversation = document.getElementById('conversation');
-                        conversation.scrollTop = conversation.scrollHeight;
-                    };
+                    <script>
+                        // 页面加载时滚动到最新消息
+                        window.onload = function () {
+                            const conversation = document.getElementById('conversation');
+                            conversation.scrollTop = conversation.scrollHeight;
+                        };
 
-                    document.getElementById('uploadButton').addEventListener('click', function () {
-                        document.getElementById('imageInput').click();
-                    });
+                        document.getElementById('uploadButton').addEventListener('click', function () {
+                            document.getElementById('imageInput').click();
+                        });
 
-                    document.getElementById('imageInput').addEventListener('change', function () {
-                        const file = this.files[0];
-                        if (file) {
-                            const reader = new FileReader();
-                            reader.onload = function (e) {
-                                document.getElementById('imagePreview').src = e.target.result;
-                                document.getElementById('imagePreview').style.display = 'block';
+                        document.getElementById('imageInput').addEventListener('change', function () {
+                            const file = this.files[0];
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onload = function (e) {
+                                    document.getElementById('imagePreview').src = e.target.result;
+                                    document.getElementById('imagePreview').style.display = 'block';
+                                }
+                                reader.readAsDataURL(file);
+                            } else {
+                                document.getElementById('imagePreview').style.display = 'none';
                             }
-                            reader.readAsDataURL(file);
-                        } else {
-                            document.getElementById('imagePreview').style.display = 'none';
-                        }
-                    });
+                        });
 
-                    document.getElementById('messageForm').addEventListener('submit', function (e) {
-                        e.preventDefault();  // 防止默认表单提交
+                        document.getElementById('messageForm').addEventListener('submit', function (e) {
+                            e.preventDefault();  // 防止默认表单提交
 
-                        const formData = new FormData(this);  // 创建 FormData 对象
+                            const formData = new FormData(this);  // 创建 FormData 对象
 
-                        fetch("{% url 'send_message' room.id %}", {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-CSRFToken': '{{ csrf_token }}'  // 发送 CSRF 令牌
-                            }
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('网络响应失败');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            const newMessage = `
+                            fetch("{% url 'send_message' room.id %}", {
+                                method: 'POST',
+                                body: formData,
+                                headers: {
+                                    'X-CSRFToken': '{{ csrf_token }}'  // 发送 CSRF 令牌
+                                }
+                            })
+                                .then(response => {
+                                    if (!response.ok) {
+                                        throw new Error('网络响应失败');
+                                    }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    const newMessage = `
                                 <div class="thread">
                                     <div class="thread__top">
                                         <div class="thread__author">
@@ -145,48 +156,48 @@
                                         ${data.image ? `<img src="${data.image}" alt="Message Image" class="message-image" style="max-width: 300px; height: auto;"/>` : ''}
                                     </div>
                                 </div>`;
-                            document.getElementById('threads').insertAdjacentHTML('beforeend', newMessage);
+                                    document.getElementById('threads').insertAdjacentHTML('beforeend', newMessage);
 
-                            // 自动滚动到最新消息
-                            const conversation = document.getElementById('conversation');
-                            conversation.scrollTop = conversation.scrollHeight;
+                                    // 自动滚动到最新消息
+                                    const conversation = document.getElementById('conversation');
+                                    conversation.scrollTop = conversation.scrollHeight;
 
-                            document.getElementById('messageForm').reset();  // 重置表单
-                            document.getElementById('imagePreview').style.display = 'none';  // 隐藏图片预览
-                        })
-                        .catch(error => {
-                            console.error('发送消息出错:', error);
+                                    document.getElementById('messageForm').reset();  // 重置表单
+                                    document.getElementById('imagePreview').style.display = 'none';  // 隐藏图片预览
+                                })
+                                .catch(error => {
+                                    console.error('发送消息出错:', error);
+                                });
                         });
-                    });
-                </script>
+                    </script>
+                </div>
             </div>
-        </div>
 
-        <!-- Participants Start -->
-        <div class="participants">
-            <h4 class="participants__top">当前对话人</h4>
-            <div class="participants__list scroll">
-                <a href="{% url 'user-profile' room.user1.id %}" class="participant">
-                    <div class="avatar avatar--medium">
-                        <img src="{{ room.user1.avatar.url }}" alt="{{ room.user1.username }} 的头像"/>
-                    </div>
-                    <p>
-                        {{ room.user1.username }}
-                        <span>@ {{ room.user1.username }}</span>
-                    </p>
-                </a>
-                <a href="{% url 'user-profile' room.user2.id %}" class="participant">
-                    <div class="avatar avatar--medium">
-                        <img src="{{ room.user2.avatar.url }}" alt="{{ room.user2.username }} 的头像"/>
-                    </div>
-                    <p>
-                        {{ room.user2.username }}
-                        <span>@ {{ room.user2.username }}</span>
-                    </p>
-                </a>
+            <!-- Participants Start -->
+            <div class="participants">
+                <h4 class="participants__top">当前对话人</h4>
+                <div class="participants__list scroll">
+                    <a href="{% url 'user-profile' room.user1.id %}" class="participant">
+                        <div class="avatar avatar--medium">
+                            <img src="{{ room.user1.avatar.url }}" alt="{{ room.user1.username }} 的头像"/>
+                        </div>
+                        <p>
+                            {{ room.user1.username }}
+                            <span>@ {{ room.user1.username }}</span>
+                        </p>
+                    </a>
+                    <a href="{% url 'user-profile' room.user2.id %}" class="participant">
+                        <div class="avatar avatar--medium">
+                            <img src="{{ room.user2.avatar.url }}" alt="{{ room.user2.username }} 的头像"/>
+                        </div>
+                        <p>
+                            {{ room.user2.username }}
+                            <span>@ {{ room.user2.username }}</span>
+                        </p>
+                    </a>
+                </div>
             </div>
+            <!-- Participants End -->
         </div>
-        <!-- Participants End -->
-    </div>
-</main>
+    </main>
 {% endblock %}
