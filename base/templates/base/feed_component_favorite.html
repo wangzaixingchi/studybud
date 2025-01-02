@@ -1,0 +1,111 @@
+<div class="container">
+    <div id="favorites-list" class="roomList">
+        <!-- 收藏的房间将动态插入到这里 -->
+    </div>
+
+    <div class="pagination" id="pagination" style="display: none;">
+        <button id="prevPage" onclick="changePage(-1)">上一页</button>
+        <span id="pageInfo"></span>
+        <button id="nextPage" onclick="changePage(1)">下一页</button>
+    </div>
+
+    <div class="no-rooms" id="no-rooms" style="display: none;">
+        <p>您还没有收藏任何房间!</p>
+    </div>
+
+ 
+
+    <script>
+        const itemsPerPage = 3; // 每页显示的项数
+        let currentPage = 1;
+        let items = []; // 用于存储房间数据
+        let totalPages = 0;
+
+        // 加载收藏房间数据
+        function loadFavorites() {
+            fetch('/my-favorites/') // 假设这是获取收藏房间的 API
+                .then(response => response.json())
+                .then(data => {
+                    items = data.favorites; // 存储房间数据
+                    totalPages = Math.ceil(items.length / itemsPerPage);
+                    displayFavorites(); // 显示房间
+                })
+                .catch(error => console.error('Error fetching favorites:', error));
+        }
+
+        // 显示当前页面的房间
+        function displayFavorites() {
+            const favoritesList = document.getElementById('favorites-list');
+            favoritesList.innerHTML = ''; // 清空现有内容
+
+            if (items.length === 0) {
+                document.getElementById('no-rooms').style.display = 'block';
+                favoritesList.style.display = 'none';
+                document.getElementById('pagination').style.display = 'none';
+            } else {
+                document.getElementById('no-rooms').style.display = 'none';
+                favoritesList.style.display = 'block';
+                document.getElementById('pagination').style.display = 'block';
+
+                // 计算显示的起始和结束项索引
+                const start = (currentPage - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+
+                // 插入房间项
+                items.slice(start, end).forEach(room => {
+                    const roomItem = document.createElement('div');
+                    roomItem.className = 'roomListRoom';
+                    roomItem.innerHTML = `
+                        <div class="roomListRoom__header">
+                            <a href="/user-profile/${room.host.id}" class="roomListRoom__author">
+                                <div class="avatar avatar--small">
+                                    <img src="${room.host_avatar}" alt="${room.host.username} 的头像"/>
+                                </div>
+                                <span>@${room.host.username}</span>
+                            </a>
+                            <div class="roomListRoom__actions">
+                                <span>${room.created} 以前</span>
+                            </div>
+                            <form action="/toggle_favorite/${room.id}" method="post">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="${csrf_token}">
+                                <span>${room.favorited ? '已收藏' : '可收藏'}</span>
+                                <button type="submit" class="${room.favorited ? 'button-favorited' : 'button-not-favorited'}">
+                                    ${room.favorited ? '⭐' : '❌'}
+                                </button>
+                            </form>
+                        </div>
+                        <div class="roomListRoom__content">
+                            <a href="/room/${room.id}">${room.name}</a>
+                        </div>
+                        <div class="roomListRoom__meta">
+                            <a href="/room/${room.id}" class="roomListRoom__joined">
+                                ${room.participants_count} 参加
+                            </a>
+                            <p class="roomListRoom__topic">${room.topic}</p>
+                        </div>
+                    `;
+                    favoritesList.appendChild(roomItem);
+                });
+
+                // 更新分页信息
+                document.getElementById('pageInfo').textContent = `第 ${currentPage} 页，共 ${totalPages} 页`;
+                updatePaginationButtons();
+            }
+        }
+
+        // 更新分页按钮状态
+        function updatePaginationButtons() {
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages;
+        }
+
+        // 切换页面
+        function changePage(direction) {
+            currentPage += direction;
+            displayFavorites();
+        }
+
+        // 初始化加载收藏房间
+        loadFavorites();
+    </script>
+</div>
