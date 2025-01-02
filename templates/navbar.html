@@ -50,7 +50,7 @@
                 {% endif %}
 
                 <a href="{% url 'update-user' %}" class="dropdown-link">个人编辑</a>
-                <a href="{% url 'update-user' %}" class="dropdown-link">房间访问记录</a>
+
                 <a href="{% url 'notifications' %}" class="notification-button">通知</a>
                 <a href="{% url 'game' %}" class="dropdown-link">娱乐</a>
                 {% if request.user.is_staff %}

@@ -15,9 +15,21 @@
                     </a>
                     <div class="roomListRoom__actions">
                         <span>{{ room.created|timesince }} 以前</span>
+                        {% if request.user.is_superuser %}
+                            {% if room.is_disabled %}
+                                <button onclick="enableRoom({{ room.id }})" class="button-enable" style="color: green;">
+                                    取消禁用
+                                </button>
+                            {% else %}
+                                <button onclick="disableRoom({{ room.id }})" class="button-disable" style="color: red;">
+                                    禁用房间
+                                </button>
+                            {% endif %}
+                        {% endif %}
                     </div>
-                    <button id="favorite-button-{{ room.id }}" 
-                            class="{% if user in room.favorites.all %}button-favorited{% else %}button-not-favorited{% endif %}" 
+                {% if request.user.is_authenticated and not room.is_disabled %}
+                    <button id="favorite-button-{{ room.id }}"
+                            class="{% if user in room.favorites.all %}button-favorited{% else %}button-not-favorited{% endif %}"
                             onclick="toggleFavorite({{ room.id }})">
                         {% if user in room.favorites.all %}
                             ⭐已收藏
@@ -25,9 +37,22 @@
                             ❌可收藏
                         {% endif %}
                     </button>
+                {% else %}
+                    <button></button>
+                {% endif %}
                 </div>
                 <div class="roomListRoom__content">
-                    <a href="{% url 'room' room.id %}">{{ room.name }}</a>
+                  {% if room.is_disabled %}
+                        {% if request.user == room.host or request.user.is_superuser %}
+                            <a href="{% url 'room' room.id %}">{{ room.name }}</a>
+                            <span style="color: red;">此房间已被禁用，请联系管理员</span>
+
+                        {% else %}
+                            <span style="color: gray;">此房间已被禁用，无法查看。</span>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'room' room.id %}">{{ room.name }}</a>
+                    {% endif %}
                 </div>
                 <div class="roomListRoom__meta">
                     <a href="{% url 'room' room.id %}" class="roomListRoom__joined">
@@ -117,6 +142,54 @@
             .catch(error => {
                 console.error('Error toggling favorite:', error);
             });
+        }
+
+        function disableRoom(roomId) {
+            const url = "{% url 'disable-room' 0 %}".replace('0', roomId);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            if (confirm("您确定要禁用这个房间吗？")) {
+                axios.post(url, {}, {
+                    headers: {
+                        'X-CSRFToken': csrfToken // 发送 CSRF 令牌
+                    }
+                })
+                .then(response => {
+                    if (response.data.success) {
+                        alert("房间已禁用。");
+                        location.reload(); // 刷新页面以更新房间列表
+                    } else {
+                        alert("禁用房间失败，请重试。");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error disabling room:', error);
+                });
+            }
+        }
+
+        function enableRoom(roomId) {
+            const url = "{% url 'enable-room' 0 %}".replace('0', roomId);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            if (confirm("您确定要取消禁用这个房间吗？")) {
+                axios.post(url, {}, {
+                    headers: {
+                        'X-CSRFToken': csrfToken // 发送 CSRF 令牌
+                    }
+                })
+                .then(response => {
+                    if (response.data.success) {
+                        alert("房间已取消禁用。");
+                        location.reload(); // 刷新页面以更新房间列表
+                    } else {
+                        alert("取消禁用房间失败，请重试。");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error enabling room:', error);
+                });
+            }
         }
 
         // 初始化显示第一页

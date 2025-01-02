@@ -536,12 +536,15 @@ def unmute_user(request, user_id):
         user.is_muted = False  # 将用户的禁言状态设置为 False
         user.save()  # 保存更改
 
+        # 添加通知
+        notification_message = f"您已被取消禁言，您现在可以再次发言。"
+        Notification.objects.create(user=user, message=notification_message)
+
         messages.success(request, f"{user.username} 已成功取消禁言。")
     else:
         messages.error(request, "您没有权限取消禁言。")
 
     return redirect('user-profile', pk=str(user.id))  # 重定向到用户资料页面
-
 
 @login_required(login_url='/login')
 def mark_notification_as_read(request, notification_id):
@@ -551,13 +554,21 @@ def mark_notification_as_read(request, notification_id):
     return redirect('notifications')  # 假设您有一个显示通知的页面
 
 
-# 通知列表
+
 @login_required(login_url='/login')  # 确保用户已登录
 def notifications_view(request):
-    # 获取当前用户的通知
-    notifications = request.user.notification_set.all()
-    # 渲染通知模板，传递通知数据
-    return render(request, 'base/notifications.html', {'notifications': notifications})
+    # 获取当前用户的所有通知
+    notifications = request.user.notification_set.all().order_by('-timestamp')  # 按时间降序排列
+
+    # 设置每页显示的通知数量
+    paginator = Paginator(notifications, 5)  # 每页显示5个通知
+
+    # 获取当前页码
+    page_number = request.GET.get('page')  # 从URL获取页码
+    notifications_page = paginator.get_page(page_number)  # 获取当前页的通知
+
+    # 渲染通知模板，传递分页通知数据
+    return render(request, 'base/notifications.html', {'notifications': notifications_page})
 
 
 # 公告列表
@@ -647,22 +658,28 @@ def dm_room(request, room_id):
     return render(request, 'base/dm_room.html', {'room': room, 'messages': messages})
 
 
-@login_required(login_url='/login')
+
 def send_message(request, room_id):
     room = get_object_or_404(DirectMessageRoom, id=room_id)
-    # 获取 user1 和 user2
     user1 = room.user1
     user2 = room.user2
+
     if request.method == 'POST':
         content = request.POST.get('content')
         image = request.FILES.get('image')  # 获取上传的图片
 
         # 查找当前用户和目标用户之间的房间
         room2 = DirectMessageRoom.objects.filter(
-            (Q(user1=user2) & Q(user2=user1))
+            (Q(user1=user2) & Q(user2=user1)) | (Q(user1=user1) & Q(user2=user2))
         ).first()
+
         if content or image:  # 只在内容或图片不为空时创建消息
-            DirectMessage.objects.create(room=room2, sender=room2.user1, content=content, image=image)
+            if room2 is not None:
+                DirectMessage.objects.create(room=room2, sender=request.user, content=content, image=image)
+            else:
+                return JsonResponse({'status': 'error', 'message': '房间不存在'})
+
+        # 创建当前房间的消息
         message = DirectMessage.objects.create(room=room, sender=request.user, content=content, image=image)
 
         # 返回 JSON 响应
@@ -674,6 +691,7 @@ def send_message(request, room_id):
             'image': message.image.url if message.image else None,
         })
 
+    return JsonResponse({'status': 'error', 'message': '请求方法不正确'})
 
 @login_required(login_url='/login')
 def get_messages(request, room_id):
@@ -755,3 +773,43 @@ def unfollow_user(request, user_id):
     user_to_unfollow = get_object_or_404(User, id=user_id)
     request.user.profile.followers.remove(user_to_unfollow)
     return JsonResponse({'status': 'success', 'action': 'unfollow', 'user_id': user_id})
+@login_required
+
+def disable_room(request, room_id):
+    room = get_object_or_404(Room, id=room_id)
+
+    if request.user.is_superuser or request.user == room.host:
+        room.is_disabled = True
+        room.save()
+
+        # 发送通知
+        notification_message = f"房间 '{room.name}' 已被禁用。"
+        Notification.objects.create(user=room.host, message=notification_message)
+
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False}, status=403)
+@login_required
+def enable_room(request, room_id):
+    room = get_object_or_404(Room, id=room_id)
+
+    if request.user.is_superuser or request.user == room.host:
+        room.is_disabled = False
+        room.save()
+
+        # 发送解禁通知
+        notification_message = f"房间 '{room.name}' 已被解禁。"
+        Notification.objects.create(user=room.host, message=notification_message)
+
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False}, status=403)
+
+
+def disable_room(request, room_id):
+    room = get_object_or_404(Room, id=room_id)
+
+    if request.method == 'POST':
+        room.is_disabled = True  # 禁用房间
+        room.save()
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False}, status=400)

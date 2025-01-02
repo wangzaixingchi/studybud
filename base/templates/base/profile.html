@@ -22,8 +22,42 @@
                             <a href="{% url 'update-user' %}" class="btn btn--main btn--pill">编辑资料</a>
                         {% endif %}
                     </div>
-              
-                 {% if request.user.is_authenticated and request.user != user %}
+ <div class="profile__info">
+                    {% if user.is_muted %}
+                        <div class="alert alert-warning">
+                            <strong>此用户已被禁言</strong><br>
+                            原因: {{ user.mute_reason }}<br>
+                            禁用至: {{ user.mute_until|date:"Y-m-d H:i:s" }}
+                        </div>
+                        {% if request.user.is_staff %}
+                            <form method="post" action="{% url 'unmute-user' user.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn--main btn--pill">取消禁言</button>
+                            </form>
+                        {% endif %}
+                    {% elif  not user.is_staff %}
+                        {% if  request.user.is_staff %}
+                            <div class="mute-section">
+                                <button class="btn btn--main btn--pill" id="mute-button" onclick="toggleMuteForm()">
+                                    禁言
+                                </button>
+                                <form id="mute-form" method="post" action="{% url 'mute-user' user.id %}" style="display: none;">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="mute_reason">禁言原因:</label>
+                                        <input type="text" name="mute_reason" required class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="mute_until">禁言到期时间:</label>
+                                        <input type="datetime-local" name="mute_until" required class="form-control">
+                                    </div>
+                                    <button type="submit" class="btn btn--main btn--pill">禁用</button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                    {% if request.user.is_authenticated and request.user != user %}
                         <div class="profile__info">
                             <button class="btn btn--main btn--pill" id="follow-button-{{ user.id }}" onclick="toggleFollow({{ user.id }})">
                                 {% if user in request.user.profile.followers.all %}
@@ -32,55 +66,92 @@
                                     关注
                                 {% endif %}
                             </button>
-                      </div>
-                        {% endif %}
-                 
+                        </div>
+                    {% endif %}
+
                     <div class="profile__info">
                         {% if request.user.is_authenticated and request.user != user %}
                             <a href="{% url 'create_dm_room' user.id %}" class="btn btn--main btn--pill">私聊</a>
                         {% endif %}
                     </div>
-                 {% if request.user.is_authenticated and request.user == user %}
-                    <div class="profile__info">
-                        <p>关注数: <span id="followers-count">{{ followers_count }}</span></p>
 
-                       
-                            <button class="btn btn--main btn--pill" id="toggle-followers"
-                                    onclick="toggleFollowersList()">查看关注列表
-                            </button>
+                    {% if request.user.is_authenticated and request.user == user %}
+                        <div class="profile__info">
+                            <p>关注数: <span id="followers-count">{{ followers_count }}</span></p>
+                            <button class="btn btn--main btn--pill" id="toggle-followers" onclick="toggleFollowersList()">查看关注列表</button>
                             <div id="followers-list" style="display: none;">
                                 <ul>
                                     {% for follower in followers %}
-                                     <li class="follower-item">
-                        <div class="avatar avatar--small">
-                            <img src="{{ follower.avatar.url }}" alt="{{ follower.username }} 的头像"/>
-                        </div>
-                        <a href="{% url 'user-profile' follower.id %}">{{ follower.username }}</a>
-                    </li>
-                {% empty %}
-                    <li>没有关注</li>
-                {% endfor %}
+                                        <li class="follower-item">
+                                            <div class="avatar avatar--small">
+                                                <img src="{{ follower.avatar.url }}" alt="{{ follower.username }} 的头像"/>
+                                            </div>
+                                            <a href="{% url 'user-profile' follower.id %}">{{ follower.username }}</a>
+                                        </li>
+                                    {% empty %}
+                                        <li>没有关注</li>
+                                    {% endfor %}
                                 </ul>
-
                                 <div class="pagination">
                                     {% if followers_page.has_previous %}
                                         <a href="?page=1">第一页</a>
                                         <a href="?page={{ followers_page.previous_page_number }}">上一页</a>
                                     {% endif %}
-
                                     <span>第 {{ followers_page.number }} 页，共 {{ followers_page.paginator.num_pages }} 页</span>
-
                                     {% if followers_page.has_next %}
                                         <a href="?page={{ followers_page.next_page_number }}">下一页</a>
                                         <a href="?page={{ followers_page.paginator.num_pages }}">最后一页</a>
                                     {% endif %}
                                 </div>
                             </div>
-                     
+                        </div>
+                    {% endif %}
+                <br>
+ {% if request.user.is_authenticated and request.user == user %}
+                        <div class="profile__info">
+                        
+                            <button class="btn btn--main btn--pill" id="load-history">查看历史记录</button>
+                            <div id="history-list" style="display: none;">
+                                <ul>
+                                    <!-- 历史记录列表将由JavaScript填充 -->
+                                </ul>
+                            </div>
+                        </div>
 
-                       
-                    </div>
-   {% endif %}
+                        <script>
+                            function loadHistory(page = 1) {
+                                fetch(`/room-history/?page=${page}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        const historyList = document.getElementById('history-list').querySelector('ul');
+                                        historyList.innerHTML = '';  // 清空当前列表
+
+                                        if (data.status === 'success') {
+                                            data.data.forEach(history => {
+                                                const listItem = document.createElement('li');
+                                                listItem.classList.add('follower-item'); // 使用相同的类
+                                                listItem.innerHTML = `
+                                                    <a href="/room/${history.room__id}">${history.room__name}</a> - ${new Date(history.timestamp).toLocaleString()}`;
+                                                historyList.appendChild(listItem);
+                                            });
+                                        } else {
+                                            historyList.innerHTML = '<li>没有历史记录。</li>';
+                                        }
+                                    })
+                                    .catch(error => console.error('Error fetching history:', error));
+                            }
+
+                            document.addEventListener('DOMContentLoaded', function() {
+                                document.getElementById('load-history').addEventListener('click', function() {
+                                    const historyList = document.getElementById('history-list');
+                                    historyList.style.display = historyList.style.display === 'none' ? 'block' : 'none';
+                                    if (historyList.style.display === 'block') {
+                                        loadHistory();  // 默认加载第一页
+                                    }
+                                });
+                            });
+                        </script>
+                    {% endif %}
                     <div class="profile__about">
                         <h3>简介</h3>
                         <p>{{ user.bio }}</p>
@@ -89,15 +160,9 @@
 
                 <div class="roomList__header">
                     <div style="display: flex; width: 100%;">
-                        <a id="my-rooms" href="#" style="flex: 1; text-align: center;" class="active"
-                           onclick="loadContent('rooms')">
-                            房间
-                        </a>
+                        <a id="my-rooms" href="#" style="flex: 1; text-align: center;" class="active" onclick="loadContent('rooms')">房间</a>
                         {% if request.user == user %}
-                            <a id="my-favorites" href="#" style="flex: 1; text-align: center;"
-                               onclick="loadContent('favorites')">
-                                我的收藏
-                            </a>
+                            <a id="my-favorites" href="#" style="flex: 1; text-align: center;" onclick="loadContent('favorites')">我的收藏</a>
                         {% endif %}
                     </div>
                 </div>
@@ -122,6 +187,10 @@
     </main>
 
     <script>
+     function toggleMuteForm() {
+        const form = document.getElementById('mute-form');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
         function toggleFollowersList() {
             const followersList = document.getElementById('followers-list');
             followersList.style.display = followersList.style.display === 'none' ? 'block' : 'none';

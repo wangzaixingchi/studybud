@@ -46,6 +46,7 @@ class Room(models.Model):
     topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, null=True, verbose_name='房间话题')  # 房间话题
     name = models.CharField(max_length=200, verbose_name='房间名称')  # 房间名称
     description = models.TextField(null=True, blank=True, verbose_name='房间描述')  # 房间描述
+    is_disabled = models.BooleanField(default=False)  # 房间禁用标志
     participants = models.ManyToManyField(User, related_name='participants', blank=True, verbose_name='参与者')  # 参与者
     created = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')  # 创建时间
     updated = models.DateTimeField(auto_now=True, verbose_name='更新时间')  # 更新时间

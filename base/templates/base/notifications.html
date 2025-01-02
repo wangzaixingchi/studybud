@@ -1,7 +1,7 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<main class="layout layout--3 container mt-5">
+<main class="container mt-5">
     <h3 class="notification-title text-center text-primary mb-4">通知</h3>
     <ul class="notification-list list-group">
         {% for notification in notifications %}
@@ -15,5 +15,15 @@
             <li class="empty-notification list-group-item text-center">没有通知</li>
         {% endfor %}
     </ul>
+
+    <div class="pagination mt-4 d-flex justify-content-center">
+        <span class="mx-3">第 {{ notifications.number }} 页</span>
+        {% if notifications.has_previous %}
+            <a href="?page={{ notifications.previous_page_number }}" >上一页</a>
+        {% endif %}
+        {% if notifications.has_next %}
+            <a href="?page={{ notifications.next_page_number }}" >下一页</a>
+        {% endif %}
+    </div>
 </main>
 {% endblock %}

@@ -50,4 +50,6 @@ path('room/<int:room_id>/send/', views.send_message, name='send_message'),  # хо
     path('profile/<int:user_id>/', views.userProfile, name='user-profile'),
 
     path('room-history/', RoomHistoryView.as_view(), name='room-history'),
+    path('room/<int:room_id>/toggle-disable/', views.disable_room, name='disable-room'),
+    path('room/<int:room_id>/enable/', views.enable_room, name='enable-room'),
 ]
